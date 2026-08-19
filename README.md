@@ -1,48 +1,112 @@
-<div align="center">
-  <h1>Sharkord</h1>
-  <p><strong>A lightweight, self-hosted real-time communication platform</strong></p>
-  
-  [![Version](https://img.shields.io/github/v/release/Sharkord/sharkord)](https://github.com/Sharkord/sharkord/releases)
-  [![License](https://img.shields.io/github/license/Sharkord/sharkord)](LICENSE)
-  [![Downloads](https://img.shields.io/github/downloads/Sharkord/sharkord/total)](https://github.com/Sharkord/sharkord/releases)
-  [![Last Commit](https://img.shields.io/github/last-commit/Sharkord/sharkord)](https://github.com/Sharkord/sharkord/commits)
-  
-  [![Bun](https://img.shields.io/badge/Bun-v1.3.14-green.svg)](https://bun.sh)
-  [![Mediasoup](https://img.shields.io/badge/Mediasoup-v3.19.19-green.svg)](https://mediasoup.org)
-</div>
+# VOXEN
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B0B71U3476)
+VOXEN is an alpha-stage communication platform for small groups that need lightweight voice, persistent chat, and screen sharing without running a large community stack.
 
-## What is Sharkord?
+The project is desktop-first, built around a Tauri app that connects to a server. During the Alpha, the deployment model is intentionally simple: a centralized server can host the current VOXEN experience while the product, packaging, and desktop flows continue to evolve.
 
-> [!NOTE]
-> Sharkord is in alpha stage. Bugs, incomplete features and breaking changes are to be expected.
+> [!IMPORTANT]
+> VOXEN is in active Alpha development. APIs, configuration, desktop packaging, and runtime behavior may change without notice.
 
-Sharkord is a self-hosted communication platform that brings the most important Discord-like features to your own infrastructure. Voice, video, and screen sharing without the bloat or surveillance.
+## Current Features
 
-## Docs
+- Voice channels
+- Persistent text chat
+- Screen sharing
+- Roles, invites, and permissions
+- Desktop app via Tauri
+- Lightweight server suitable for small groups
 
-For detailed documentation, please visit our [Documentation](https://sharkord.com/docs).
+## Architecture
 
-## Wanna Try It Out?
+VOXEN is based on the open-source Sharkord codebase and currently keeps several internal Sharkord technical names for compatibility.
 
-Check out the Live Demo at [demo.sharkord.com](https://demo.sharkord.com).
+Core technologies:
 
-## Getting Started
+- Bun for the server runtime and workspace tooling
+- React and Vite for the web client
+- tRPC and WebSocket subscriptions for client/server communication
+- mediasoup for voice and real-time media routing
+- SQLite and Drizzle for persistence
+- Tauri for the desktop shell
 
-Sharkord is distributed as a standalone binary that bundles both server and client components. Get started by downloading the latest release for your platform from the [Releases](https://github.com/Sharkord/sharkord/releases) page. We ship binaries for Windows, macOS, and Linux.
+## Monorepo Layout
 
-#### Linux x64
+```text
+apps/
+  client/      React + Vite web client
+  server/      Bun server, tRPC, SQLite, Drizzle, mediasoup
+  desktop/     Tauri desktop app
 
-```bash
-curl -L https://github.com/sharkord/sharkord/releases/latest/download/sharkord-linux-x64 -o sharkord
-chmod +x sharkord
-./sharkord
+packages/
+  shared/      Shared types, constants, and helpers
+  ui/          Shared presentational UI components
+  plugin-sdk/  Plugin API surface
+  e2e/         Playwright end-to-end tests
 ```
 
-#### Docker
+Internal package names such as `@sharkord/shared` are intentionally unchanged during this stage.
 
-Sharkord can also be run using Docker. Here's how to run it:
+## Development
+
+Requirements:
+
+- [Bun](https://bun.sh/) 1.3.14
+- Rust toolchain for Tauri desktop development
+- WebView2 on Windows for the desktop app
+- tmux is optional for the helper startup script
+
+Install dependencies from the repository root:
+
+```bash
+bun install
+```
+
+Run the server and web client:
+
+```bash
+# option 1: helper script on supported shells
+./start.sh
+
+# option 2: run each app separately
+cd apps/server
+bun run dev
+
+cd apps/client
+bun run dev
+```
+
+Run the desktop app:
+
+```bash
+cd apps/desktop
+bun run dev
+```
+
+The desktop app may require a configured remote server URL depending on the current desktop branch and environment.
+
+Run tests from the repository root:
+
+```bash
+bun run test
+```
+
+Run type checks from the repository root:
+
+```bash
+bun run check-types
+```
+
+## Docker
+
+Docker support is available through the repository `Dockerfile`. Some runtime paths and binary names still use the inherited Sharkord technical names for compatibility.
+
+Build the image directly from the source tree:
+
+```bash
+docker build -t voxen .
+```
+
+Run the container:
 
 ```bash
 docker run \
@@ -50,43 +114,20 @@ docker run \
   -p 40000:40000/tcp \
   -p 40000:40000/udp \
   -v ./data:/home/bun/.config/sharkord \
-  --name sharkord \
-  sharkord/sharkord:latest
+  --name voxen \
+  voxen
 ```
 
-> [!NOTE]
-> Upon first launch, Sharkord will create a secure token and print it to the console. This token allows ANYONE to gain owner access to your server, so make sure to store it securely and do not lose it!
+On first launch, the server may print an owner access token. Treat that token as secret.
 
-Once the server is running, open your web browser and navigate to [http://localhost:4991](http://localhost:4991) to access the Sharkord client interface. If you're running the server on a different machine, replace `localhost` with the server's IP address or domain name.
+## Documentation
 
-Check out our [Documentation](https://sharkord.com/docs) for more detailed setup instructions, configuration options, and troubleshooting tips.
+Documentation is being prepared. Until then, the source tree is the most accurate reference for the current Alpha behavior.
 
-## Contributing
+## License and Acknowledgements
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+VOXEN is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-## License
+VOXEN is developed from the open-source Sharkord codebase. We preserve the existing license and acknowledge the original Sharkord project and its contributors.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-Built with amazing open-source technologies:
-
-- [Bun](https://bun.sh)
-- [tRPC](https://trpc.io)
-- [Mediasoup](https://mediasoup.org)
-- [Drizzle ORM](https://orm.drizzle.team)
-- [React](https://react.dev)
-- [Radix UI](https://www.radix-ui.com)
-- [ShadCN UI](https://ui.shadcn.com/)
-- [Tailwind CSS](https://tailwindcss.com)
-
-<div align="center">
-  <p>Made with ❤️ by the Sharkord team</p>
-  <p>
-    <a href="https://github.com/Sharkord/sharkord">GitHub</a> •
-    <a href="https://github.com/Sharkord/sharkord/issues">Issues</a> •
-    <a href="https://github.com/Sharkord/sharkord/discussions">Discussions</a>
-  </p>
-</div>
+This project builds on excellent open-source technology, including Bun, React, Vite, tRPC, mediasoup, Drizzle, SQLite, and Tauri.
