@@ -94,7 +94,7 @@ const PluginInstallConfirmDialog = memo(
                 rel="noopener noreferrer"
                 className="underline hover:text-primary transition-colors"
               >
-                https://sharkord.com/docs/plugins/security
+                {t('pluginInstallDocsLink')}
               </a>
             </p>
           </div>

@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "No Tauri IPC permissions are exposed to the remote Sharkord webview during the desktop smoke test.",
+  "description": "No Tauri IPC permissions are exposed to the remote VOXEN webview during the desktop smoke test.",
   "windows": ["main"],
   "permissions": []
 }

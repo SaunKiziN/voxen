@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="VOXEN">
+  <rect width="128" height="128" rx="28" fill="#120F18" />
+  <path d="M28 35L58 96H70L100 35H82L64 76L46 35H28Z" fill="#6C5CE7" />
+  <path d="M40 92H88" stroke="#FCFCFC" stroke-width="8" stroke-linecap="round" />
+  <path d="M48 52C58 42 70 42 80 52" fill="none" stroke="#FCFCFC" stroke-width="7" stroke-linecap="round" />
+</svg>

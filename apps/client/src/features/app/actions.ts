@@ -1,4 +1,5 @@
 import { assertNotificationsPermission } from '@/helpers/assert-notifications-permission';
+import { PRODUCT_MARK_PATH, PRODUCT_NAME } from '@/helpers/branding';
 import { getFileUrl, getUrlFromServer } from '@/helpers/get-file-url';
 import {
   LocalStorageKey,
@@ -51,15 +52,13 @@ const setOrCreateLink = (rel: string, href: string) => {
 };
 
 const applyServerBranding = (info: TServerInfo) => {
-  document.title = info.name;
+  document.title = info.name ? `${info.name} - ${PRODUCT_NAME}` : PRODUCT_NAME;
 
-  const logoUrl = info.logo
-    ? getFileUrl(info.logo)
-    : `${getUrlFromServer()}/favicon.ico`;
+  const logoUrl = info.logo ? getFileUrl(info.logo) : PRODUCT_MARK_PATH;
 
   setOrCreateLink('icon', logoUrl);
   setOrCreateLink('apple-touch-icon', logoUrl);
-  setOrCreateMeta('apple-mobile-web-app-title', info.name);
+  setOrCreateMeta('apple-mobile-web-app-title', PRODUCT_NAME);
 };
 
 export const fetchServerInfo = async (): Promise<TServerInfo | undefined> => {

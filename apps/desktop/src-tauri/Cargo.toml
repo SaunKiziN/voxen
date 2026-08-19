@@ -1,8 +1,8 @@
 [package]
-name = "sharkord-desktop"
+name = "voxen-desktop"
 version = "0.0.23"
-description = "Sharkord desktop smoke test"
-authors = ["Sharkord contributors"]
+description = "VOXEN desktop smoke test"
+authors = ["VOXEN contributors"]
 edition = "2021"
 rust-version = "1.77"
 build = "build.rs"

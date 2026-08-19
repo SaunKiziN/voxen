@@ -134,7 +134,7 @@ const GlobalErrorFallback = memo(
                 target="_blank"
                 className="hidden hover:text-foreground sm:inline"
               >
-                {GITHUB_ISSUES_URL}
+                {t('reportIssueOnGithub')}
               </a>
             </div>
           </CardContent>

@@ -8,6 +8,7 @@ import {
   useIsConnected,
   useServerName
 } from '@/features/server/hooks';
+import { PRODUCT_NAME } from '@/helpers/branding';
 import { Connect } from '@/screens/connect';
 import { Disconnected } from '@/screens/disconnected';
 import { LoadingApp } from '@/screens/loading-app';
@@ -27,11 +28,11 @@ const Routing = memo(() => {
 
   useEffect(() => {
     if (isConnected && serverName) {
-      document.title = `${serverName} - Sharkord`;
+      document.title = `${serverName} - ${PRODUCT_NAME}`;
       return;
     }
 
-    document.title = 'Sharkord';
+    document.title = PRODUCT_NAME;
   }, [isConnected, serverName]);
 
   if (isAppLoading || isPluginsLoading) {

@@ -11,6 +11,6 @@
   "inviteCode": "Kód pozvánky: {{code}}",
   "connectError": "K serveru se připojit nepodařilo: {{message}}",
   "loggingInAutomatically": "Automaticky se připojuji...",
-  "loadingApp": "Načítám Sharkord",
+  "loadingApp": "Načítám VOXEN",
   "loadingPlugins": "Načítám rozšíření"
 }

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 180" role="img" aria-label="VOXEN">
+  <rect width="560" height="180" rx="24" fill="#120F18" />
+  <g transform="translate(36 26)">
+    <rect width="128" height="128" rx="28" fill="#191322" />
+    <path d="M28 35L58 96H70L100 35H82L64 76L46 35H28Z" fill="#6C5CE7" />
+    <path d="M40 92H88" stroke="#FCFCFC" stroke-width="8" stroke-linecap="round" />
+    <path d="M48 52C58 42 70 42 80 52" fill="none" stroke="#FCFCFC" stroke-width="7" stroke-linecap="round" />
+  </g>
+  <text x="192" y="111" fill="#FCFCFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="64" font-weight="800" letter-spacing="6">VOXEN</text>
+  <rect x="194" y="128" width="180" height="6" rx="3" fill="#6C5CE7" />
+</svg>

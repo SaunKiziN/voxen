@@ -1,5 +1,6 @@
 import { useServerName } from '@/features/server/hooks';
 import { useOwnPublicUser } from '@/features/server/users/hooks';
+import { PRODUCT_NAME } from '@/helpers/branding';
 import { getFileUrl } from '@/helpers/get-file-url';
 import { getInitialsFromName } from '@/helpers/get-initials-from-name';
 import { uploadImage } from '@/helpers/upload-file';
@@ -132,7 +133,7 @@ const WelcomeProfileSetupDialog = memo(
           <DialogHeader>
             <DialogTitle>
               {t('welcomeProfileSetupTitle', {
-                serverName: serverName ?? 'Sharkord'
+                serverName: serverName ?? PRODUCT_NAME
               })}
             </DialogTitle>
             <DialogDescription>

@@ -11,6 +11,6 @@
   "inviteCode": "Code d'invitation : {{code}}",
   "connectError": "Impossible de se connecter : {{message}}",
   "loggingInAutomatically": "Connexion automatique...",
-  "loadingApp": "Chargement de Sharkord",
+  "loadingApp": "Chargement de VOXEN",
   "loadingPlugins": "Chargement des plugins"
 }

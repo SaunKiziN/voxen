@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"No Tauri IPC permissions are exposed to the remote Sharkord webview during the desktop smoke test.","local":true,"windows":["main"],"permissions":[]}}
+{"default":{"identifier":"default","description":"No Tauri IPC permissions are exposed to the remote VOXEN webview during the desktop smoke test.","local":true,"windows":["main"],"permissions":[]}}

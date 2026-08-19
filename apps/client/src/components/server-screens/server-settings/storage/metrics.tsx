@@ -38,7 +38,7 @@ const DiskMetrics = memo(({ diskMetrics }: DiskMetricsProps) => {
       </div>
       <div>
         <div className="text-sm font-medium text-muted-foreground">
-          {t('diskSharkordUsed')}
+          {t('diskVOXENUsed')}
         </div>
         <div className="text-lg font-semibold">
           {filesize(diskMetrics.sharkordUsedSpace, { standard: 'jedec' })}

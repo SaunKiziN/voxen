@@ -2,6 +2,7 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { PluginSlotRenderer } from '@/components/plugin-slot-renderer';
 import { connect } from '@/features/server/actions';
 import { useInfo } from '@/features/server/hooks';
+import { PRODUCT_LOGO_PATH, PRODUCT_NAME } from '@/helpers/branding';
 import { getFileUrl, getUrlFromServer } from '@/helpers/get-file-url';
 import {
   getLocalStorageItem,
@@ -117,7 +118,7 @@ const Connect = memo(() => {
       return getFileUrl(info.logo);
     }
 
-    return '/logo.webp';
+    return PRODUCT_LOGO_PATH;
   }, [info]);
 
   return (
@@ -130,7 +131,7 @@ const Connect = memo(() => {
           <CardTitle className="flex flex-col items-center gap-2 text-center">
             <img
               src={logoSrc}
-              alt="Sharkord"
+              alt={PRODUCT_NAME}
               className="block max-h-32 max-w-full rounded-[5px]"
             />
             {info?.name && (
@@ -230,22 +231,7 @@ const Connect = memo(() => {
 
       <div className="flex justify-center items-center gap-2 text-xs text-muted-foreground select-none">
         <span>v{VITE_APP_VERSION}</span>
-        <a
-          href="https://github.com/sharkord/sharkord"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          GitHub
-        </a>
-
-        <a
-          className="text-xs"
-          href="https://sharkord.com"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Sharkord
-        </a>
+        <span>{PRODUCT_NAME}</span>
       </div>
     </div>
   );
