@@ -59,6 +59,7 @@ const UserPopover = memo(({ userId, children }: TUserPopoverProps) => {
   const isDeleted = user.name === DELETED_USER_IDENTITY_AND_NAME;
   const showDmButton =
     settings?.directMessagesEnabled && !isDeleted && !isOwnUser;
+  const status = user.status || UserStatus.OFFLINE;
 
   return (
     <Popover>
@@ -108,12 +109,9 @@ const UserPopover = memo(({ userId, children }: TUserPopoverProps) => {
             </span>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2">
-                <UserStatusBadge
-                  status={user.status || UserStatus.OFFLINE}
-                  className="h-3 w-3"
-                />
-                <span className="text-xs text-muted-foreground capitalize">
-                  {user.status || UserStatus.OFFLINE}
+                <UserStatusBadge status={status} className="h-3 w-3" />
+                <span className="text-xs text-muted-foreground">
+                  {t(`status_${status}`)}
                 </span>
               </div>
             </div>

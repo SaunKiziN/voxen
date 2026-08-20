@@ -84,5 +84,22 @@
   "searchResults": "Résultats de la recherche ({{count}})",
   "wasReactedBy": "{{reacters}} a réagi.",
   "andMore": "et {{count}} autres",
-  "toggleParticipants": "Afficher/masquer les participants"
+  "toggleParticipants": "Afficher/masquer les participants",
+  "typeAMessage": "Écrivez un message...",
+  "messageChannel": "Message dans \"{{name}}\"",
+  "status_online": "En ligne",
+  "status_idle": "Inactif",
+  "status_offline": "Hors ligne",
+  "failedLoadServerInfo": "Impossible de charger les informations du serveur",
+  "browserNotificationDmTitle": "{{author}} (MP)",
+  "browserNotificationChannelTitle": "{{author}} dans #{{channel}}",
+  "browserNotificationAttachment": "A envoyé une pièce jointe",
+  "deletedUser": "Utilisateur supprimé",
+  "openInNewTab": "Ouvrir dans un nouvel onglet",
+  "commandStatusCompleted": "Terminé",
+  "commandStatusFailed": "Échec",
+  "commandStatusPending": "En attente",
+  "responseLabel": "Réponse",
+  "ownerGranted": "Vous êtes maintenant propriétaire de ce serveur",
+  "invalidAccessToken": "Jeton d'accès invalide"
 }

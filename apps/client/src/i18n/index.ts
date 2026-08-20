@@ -1,6 +1,6 @@
 import { getLocalStorageItem, LocalStorageKey } from '@/helpers/storage';
 import type { Locale } from 'date-fns';
-import { cs, enUS, es, fr, it, ru, zhCN } from 'date-fns/locale';
+import { cs, enUS, es, fr, it, ptBR, ru, zhCN } from 'date-fns/locale';
 import i18n from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { initReactI18next } from 'react-i18next';
@@ -11,6 +11,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'es', label: 'Español', dateLocale: es },
   { code: 'fr', label: 'Français', dateLocale: fr },
   { code: 'it', label: 'Italiano', dateLocale: it },
+  { code: 'pt-BR', label: 'Português (Brasil)', dateLocale: ptBR },
   { code: 'ru', label: 'Русский', dateLocale: ru },
   { code: 'zh', label: '中文', dateLocale: zhCN }
 ] satisfies Array<{ code: string; label: string; dateLocale: Locale }>;
@@ -24,10 +25,20 @@ const detectBrowserLanguage = (): SupportedLanguage => {
     const browserLangs = navigator.languages ?? [navigator.language];
 
     for (const lang of browserLangs) {
-      const code = lang.split('-')[0];
+      const normalizedLang = lang.toLowerCase();
+      const exactLanguage = SUPPORTED_LANGUAGES.find(
+        (l) => l.code.toLowerCase() === normalizedLang
+      );
 
-      if (SUPPORTED_LANGUAGES.some((l) => l.code === code)) {
-        return code as SupportedLanguage;
+      if (exactLanguage) {
+        return exactLanguage.code;
+      }
+
+      const code = normalizedLang.split('-')[0];
+      const baseLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === code);
+
+      if (baseLanguage) {
+        return baseLanguage.code;
       }
     }
   } catch {

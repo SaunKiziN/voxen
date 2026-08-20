@@ -10,6 +10,7 @@ import {
 } from '@sharkord/ui';
 import { CalendarIcon } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TDatePickerProps = {
   value: number | undefined;
@@ -20,12 +21,12 @@ type TDatePickerProps = {
   maxDate?: number; // Unix timestamp
 };
 
-const formatDate = (date: Date | undefined): string => {
+const formatDate = (date: Date | undefined, language: string): string => {
   if (!date) {
     return '';
   }
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(language, {
     day: '2-digit',
     month: 'long',
     year: 'numeric'
@@ -44,12 +45,14 @@ const DatePicker = memo(
   ({
     value = 0,
     onChange,
-    placeholder = 'Select date...',
+    placeholder,
     className,
     minDate,
     maxDate
   }: TDatePickerProps) => {
+    const { i18n, t } = useTranslation('dialogs');
     const [open, setOpen] = useState(false);
+    const inputPlaceholder = placeholder ?? t('datePickerPlaceholder');
 
     const dateFromValue = useMemo(() => {
       return value ? new Date(value) : undefined;
@@ -65,16 +68,16 @@ const DatePicker = memo(
 
     const [month, setMonth] = useState<Date | undefined>(dateFromValue);
     const [inputValue, setInputValue] = useState(() =>
-      formatDate(dateFromValue)
+      formatDate(dateFromValue, i18n.language)
     );
 
     useEffect(() => {
-      setInputValue(formatDate(dateFromValue));
+      setInputValue(formatDate(dateFromValue, i18n.language));
 
       if (dateFromValue) {
         setMonth(dateFromValue);
       }
-    }, [dateFromValue]);
+    }, [dateFromValue, i18n.language]);
 
     const handleInputChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +104,7 @@ const DatePicker = memo(
           const timestamp = selectedDate.getTime();
 
           onChange?.(timestamp);
-          setInputValue(formatDate(selectedDate));
+          setInputValue(formatDate(selectedDate, i18n.language));
         } else {
           onChange?.(0);
           setInputValue('');
@@ -109,7 +112,7 @@ const DatePicker = memo(
 
         setOpen(false);
       },
-      [onChange]
+      [onChange, i18n.language]
     );
 
     const handleKeyDown = useCallback(
@@ -126,7 +129,7 @@ const DatePicker = memo(
       <div className={`relative flex gap-2 ${className || ''}`}>
         <Input
           value={inputValue}
-          placeholder={placeholder}
+          placeholder={inputPlaceholder}
           className="bg-background pr-10"
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
@@ -138,7 +141,7 @@ const DatePicker = memo(
               className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
             >
               <CalendarIcon className="size-3.5" />
-              <span className="sr-only">Select date</span>
+              <span className="sr-only">{t('selectDate')}</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent

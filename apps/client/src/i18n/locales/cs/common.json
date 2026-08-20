@@ -84,5 +84,22 @@
   "searchResults": "Výsledky hledání ({{count}})",
   "wasReactedBy": "reagovali {{reacters}}.",
   "andMore": "a dalších {{count}}",
-  "toggleParticipants": "Zobrazit/skrýt účastníky"
+  "toggleParticipants": "Zobrazit/skrýt účastníky",
+  "typeAMessage": "Napište zprávu...",
+  "messageChannel": "Zpráva do \"{{name}}\"",
+  "status_online": "Online",
+  "status_idle": "Nečinný",
+  "status_offline": "Offline",
+  "failedLoadServerInfo": "Nepodařilo se načíst informace o serveru",
+  "browserNotificationDmTitle": "{{author}} (DM)",
+  "browserNotificationChannelTitle": "{{author}} v #{{channel}}",
+  "browserNotificationAttachment": "Odeslal/a přílohu",
+  "deletedUser": "Smazaný uživatel",
+  "openInNewTab": "Otevřít na nové kartě",
+  "commandStatusCompleted": "Dokončeno",
+  "commandStatusFailed": "Selhalo",
+  "commandStatusPending": "Čeká",
+  "responseLabel": "Odpověď",
+  "ownerGranted": "Nyní jste vlastníkem tohoto serveru",
+  "invalidAccessToken": "Neplatný přístupový token"
 }

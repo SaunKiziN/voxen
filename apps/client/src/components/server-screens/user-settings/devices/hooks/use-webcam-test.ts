@@ -1,6 +1,7 @@
 import { getResWidthHeight } from '@/helpers/get-res-with-height';
 import { Resolution } from '@/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TUseWebcamTestParams = {
   webcamId: string | undefined;
@@ -10,31 +11,12 @@ type TUseWebcamTestParams = {
 
 const DEFAULT_DEVICE_NAME = 'default';
 
-const getWebcamErrorMessage = (error: unknown) => {
-  if (!(error instanceof DOMException)) {
-    return 'Failed to access webcam.';
-  }
-
-  switch (error.name) {
-    case 'NotAllowedError':
-    case 'PermissionDeniedError':
-      return 'Webcam permission was denied.';
-    case 'NotFoundError':
-      return 'No webcam was found.';
-    case 'NotReadableError':
-      return 'Webcam is already in use by another application.';
-    case 'OverconstrainedError':
-      return 'Selected webcam is unavailable.';
-    default:
-      return 'Failed to access webcam.';
-  }
-};
-
 const useWebcamTest = ({
   webcamId,
   webcamResolution,
   webcamFramerate
 }: TUseWebcamTestParams) => {
+  const { t } = useTranslation('settings');
   const [isStarting, setIsStarting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isPreviewReady, setIsPreviewReady] = useState(false);
@@ -78,6 +60,29 @@ const useWebcamTest = ({
       ...getResWidthHeight(webcamResolution)
     };
   }, [webcamId, webcamFramerate, webcamResolution]);
+
+  const getWebcamErrorMessage = useCallback(
+    (error: unknown) => {
+      if (!(error instanceof DOMException)) {
+        return t('webcamAccessFailed');
+      }
+
+      switch (error.name) {
+        case 'NotAllowedError':
+        case 'PermissionDeniedError':
+          return t('webcamPermissionDenied');
+        case 'NotFoundError':
+          return t('webcamNotFound');
+        case 'NotReadableError':
+          return t('webcamInUse');
+        case 'OverconstrainedError':
+          return t('webcamUnavailable');
+        default:
+          return t('webcamAccessFailed');
+      }
+    },
+    [t]
+  );
 
   const attachStreamToPreview = useCallback(
     async (stream: MediaStream | undefined) => {
@@ -162,7 +167,7 @@ const useWebcamTest = ({
 
       return false;
     }
-  }, [cleanup, getVideoConstraints, stopVideoTracks]);
+  }, [cleanup, getVideoConstraints, getWebcamErrorMessage, stopVideoTracks]);
 
   const stopTest = useCallback(() => {
     startRequestIdRef.current += 1;
@@ -188,9 +193,7 @@ const useWebcamTest = ({
 
       if (attemptCount >= maxAttempts) {
         setIsStarting(false);
-        setError(
-          'Failed to start webcam preview. Please retry or choose another webcam.'
-        );
+        setError(t('webcamPreviewFailed'));
 
         return;
       }
@@ -207,7 +210,7 @@ const useWebcamTest = ({
     return () => {
       isCancelled = true;
     };
-  }, [videoStream, isTesting, attachStreamToPreview]);
+  }, [videoStream, isTesting, attachStreamToPreview, t]);
 
   useEffect(() => {
     const settingsSignature = `${webcamId ?? DEFAULT_DEVICE_NAME}|${webcamResolution}|${webcamFramerate}`;

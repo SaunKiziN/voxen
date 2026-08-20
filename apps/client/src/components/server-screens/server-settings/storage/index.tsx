@@ -36,7 +36,7 @@ import {
   Slider,
   Switch
 } from '@sharkord/ui';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DiskMetrics } from './metrics';
 import {
@@ -57,6 +57,21 @@ const Storage = memo(() => {
   const { t } = useTranslation('settings');
   const { values, loading, submit, onChange, labels, diskMetrics } =
     useAdminStorage();
+  const quotaByUserPresets = useMemo(
+    () =>
+      QUOTA_BY_USER_PRESETS.map((preset) =>
+        preset.value === 0 ? { ...preset, label: t('unlimitedLabel') } : preset
+      ),
+    [t]
+  );
+  const signedUrlsTtlPresets = useMemo(
+    () =>
+      SIGNED_URLS_TTL_PRESETS.map((preset) => ({
+        ...preset,
+        label: t('signedUrlsTtlHours', { count: preset.value / 60 / 60 })
+      })),
+    [t]
+  );
 
   if (loading) {
     return <LoadingCard className="h-[600px]" />;
@@ -193,7 +208,7 @@ const Storage = memo(() => {
                 </>
               )
             }
-            presets={QUOTA_BY_USER_PRESETS}
+            presets={quotaByUserPresets}
           />
         </Group>
 
@@ -404,7 +419,7 @@ const Storage = memo(() => {
             </div>
 
             <div className="flex items-center gap-2">
-              {SIGNED_URLS_TTL_PRESETS.map((preset) => (
+              {signedUrlsTtlPresets.map((preset) => (
                 <Button
                   key={preset.value}
                   size="sm"

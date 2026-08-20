@@ -594,7 +594,9 @@ const Devices = memo(() => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value={VideoCodec.AUTO}>Auto</SelectItem>
+                      <SelectItem value={VideoCodec.AUTO}>
+                        {t('codecAutoLabel')}
+                      </SelectItem>
                       <SelectItem value={VideoCodec.VP8}>VP8</SelectItem>
                       <SelectItem value={VideoCodec.VP9}>VP9</SelectItem>
                       <SelectItem value={VideoCodec.H264}>H264</SelectItem>

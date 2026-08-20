@@ -13,6 +13,7 @@ import {
   TYPING_MS,
   type TJoinedMessage
 } from '@sharkord/shared';
+import i18n from 'i18next';
 import { markChannelAsRead } from '../actions';
 import {
   channelByIdSelector,
@@ -49,10 +50,15 @@ const sendBrowserNotification = (
   const textContent = getPlainTextFromHtml(message.content ?? '');
 
   const title = isDm
-    ? `${authorName} (DM)`
-    : `${authorName} in #${channel?.name ?? 'unknown'}`;
+    ? i18n.t('common:browserNotificationDmTitle', { author: authorName })
+    : i18n.t('common:browserNotificationChannelTitle', {
+        author: authorName,
+        channel: channel?.name ?? i18n.t('common:unknownChannel')
+      });
 
-  const body = textContent ? textContent : 'Sent an attachment';
+  const body = textContent
+    ? textContent
+    : i18n.t('common:browserNotificationAttachment');
   const icon = user?.avatar ? getFileUrl(user.avatar) : undefined;
 
   new Notification(title, { body, icon });

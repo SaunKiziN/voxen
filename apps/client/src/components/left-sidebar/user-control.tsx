@@ -15,6 +15,7 @@ import { UserPopover } from '../user-popover';
 
 const UserControl = memo(() => {
   const { t } = useTranslation('sidebar');
+  const { t: tCommon } = useTranslation('common');
   const ownPublicUser = useOwnPublicUser();
   const currentVoiceChannelId = useCurrentVoiceChannelId();
   const { ownVoiceState, toggleMic, toggleSound } = useVoice();
@@ -41,7 +42,7 @@ const UserControl = memo(() => {
             </span>
             <div className="flex items-center space-x-1">
               <span className="text-xs text-muted-foreground capitalize">
-                {ownPublicUser.status}
+                {tCommon(`status_${ownPublicUser.status}`)}
               </span>
             </div>
           </div>

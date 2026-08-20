@@ -7,6 +7,7 @@ import {
 } from '@/helpers/audio-gate';
 import { Slider } from '@sharkord/ui';
 import { memo, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TMicrophoneTestLevelBarProps = {
   isTesting: boolean;
@@ -29,6 +30,7 @@ const MicrophoneTestLevelBar = memo(
     onThresholdChange,
     getAudioLevelSnapshot
   }: TMicrophoneTestLevelBarProps) => {
+    const { t } = useTranslation('settings');
     const [audioLevel, setAudioLevel] = useState(() => getAudioLevelSnapshot());
     const [peakLevel, setPeakLevel] = useState(0);
     const animationFrameRef = useRef<number | null>(null);
@@ -156,7 +158,7 @@ const MicrophoneTestLevelBar = memo(
 
           {noiseGateEnabled && (
             <Slider
-              aria-label="Noise gate threshold"
+              aria-label={t('noiseGateThresholdLabel')}
               className="absolute inset-0 z-10 [&_[data-slot=slider-track]]:h-full [&_[data-slot=slider-track]]:bg-transparent [&_[data-slot=slider-range]]:bg-transparent [&_[data-slot=slider-thumb]]:size-[26px] [&_[data-slot=slider-thumb]]:border-yellow-500 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:shadow-sm"
               min={MICROPHONE_LEVEL_METER_MIN_DB}
               max={MICROPHONE_LEVEL_METER_MAX_DB}
@@ -171,7 +173,7 @@ const MicrophoneTestLevelBar = memo(
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{MICROPHONE_LEVEL_METER_MIN_DB} dB</span>
           {noiseGateEnabled ? (
-            <span>Gate: {clampedThresholdDb} dB</span>
+            <span>{t('noiseGateValue', { value: clampedThresholdDb })}</span>
           ) : (
             <span />
           )}

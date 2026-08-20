@@ -3,8 +3,10 @@ import { useIsOwnUser } from '@/features/server/users/hooks';
 import { useVoice } from '@/features/server/voice/hooks';
 import type { StreamKind } from '@sharkord/shared';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const useStreamQualityData = (streamId: number, kind: StreamKind) => {
+  const { t } = useTranslation('sidebar');
   const isOwnUser = useIsOwnUser(streamId);
   const { getStreamQuality, getStreamQualityLayers, isSimulcastConsumer } =
     useVoice();
@@ -17,7 +19,7 @@ const useStreamQualityData = (streamId: number, kind: StreamKind) => {
     const layers = getStreamQualityLayers(streamId, kind);
 
     const qualityLabel = isSimulcastScreenConsumer
-      ? getStreamQualityMetadataLabel(quality, layers)
+      ? getStreamQualityMetadataLabel(quality, layers, t)
       : null;
 
     const orderedLayers = [...layers].sort(
@@ -36,7 +38,8 @@ const useStreamQualityData = (streamId: number, kind: StreamKind) => {
     isOwnUser,
     isSimulcastConsumer,
     streamId,
-    kind
+    kind,
+    t
   ]);
 };
 

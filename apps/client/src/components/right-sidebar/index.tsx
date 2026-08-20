@@ -87,7 +87,9 @@ const RightSidebar = memo(
             ))}
             {hasHiddenUsers && (
               <div className="text-sm text-muted-foreground px-2 py-1.5">
-                +{users.length - MAX_USERS_TO_SHOW} more...
+                {t('hiddenMembers', {
+                  count: users.length - MAX_USERS_TO_SHOW
+                })}
               </div>
             )}
           </div>

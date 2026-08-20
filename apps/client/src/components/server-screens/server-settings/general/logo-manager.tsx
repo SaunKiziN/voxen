@@ -5,6 +5,7 @@ import { getTRPCClient } from '@/lib/trpc';
 import type { TFile } from '@sharkord/shared';
 import { Group } from '@sharkord/ui';
 import { memo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 type TLogoManagerProps = {
@@ -13,6 +14,7 @@ type TLogoManagerProps = {
 };
 
 const LogoManager = memo(({ logo, refetch }: TLogoManagerProps) => {
+  const { t } = useTranslation('settings');
   const openFilePicker = useFilePicker();
 
   const removeLogo = useCallback(async () => {
@@ -22,12 +24,12 @@ const LogoManager = memo(({ logo, refetch }: TLogoManagerProps) => {
       await trpc.others.changeLogo.mutate({ fileId: undefined });
       await refetch();
 
-      toast.success('Logo removed successfully!');
+      toast.success(t('logoRemoved'));
     } catch (error) {
       console.error(error);
-      toast.error('Could not remove logo. Please try again.');
+      toast.error(t('failedRemoveLogo'));
     }
-  }, [refetch]);
+  }, [refetch, t]);
 
   const onLogoClick = useCallback(async () => {
     const trpc = getTRPCClient();
@@ -44,21 +46,20 @@ const LogoManager = memo(({ logo, refetch }: TLogoManagerProps) => {
       await trpc.others.changeLogo.mutate({ fileId: temporaryFile.id });
       await refetch();
 
-      toast.success('Logo updated successfully!');
+      toast.success(t('logoUpdated'));
     } catch {
-      toast.error('Could not update logo. Please try again.');
+      toast.error(t('failedUpdateLogo'));
     }
-  }, [openFilePicker, refetch]);
+  }, [openFilePicker, refetch, t]);
 
   return (
-    <Group
-      label="Logo"
-      description="Square image is recommended. If your image is not perfectly square, the PWA icons will fall back to the default VOXEN icon."
-    >
+    <Group label={t('logoLabel')} description={t('logoDesc')}>
       <ImagePicker
         image={logo}
         onImageClick={onLogoClick}
         onRemoveImageClick={removeLogo}
+        imageAlt={t('imageAlt')}
+        removeImageLabel={t('removeImage')}
         className="object-scale-down"
       />
     </Group>

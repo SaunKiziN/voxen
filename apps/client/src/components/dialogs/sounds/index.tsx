@@ -41,7 +41,7 @@ const SoundsDialog = memo(({ isOpen, close }: TDialogBaseProps) => {
                 <div key={sound}>
                   <div className="flex items-center justify-between gap-4 py-2">
                     <div className="min-w-0 font-mono text-sm text-muted-foreground">
-                      {sound}
+                      {t(`sound_${sound}`)}
                     </div>
 
                     <Button

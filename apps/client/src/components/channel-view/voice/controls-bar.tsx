@@ -19,7 +19,8 @@ import {
   Video,
   VideoOff
 } from 'lucide-react';
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ControlToggleButton } from './control-toggle-button';
 
 type TControlsBarProps = {
@@ -27,6 +28,7 @@ type TControlsBarProps = {
 };
 
 const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
+  const { t } = useTranslation('sidebar');
   const {
     toggleMic,
     toggleSound,
@@ -37,6 +39,9 @@ const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
   const ownVoiceState = useOwnVoiceState();
   const channelCan = useChannelCan(channelId);
   const alwaysShowControls = useAlwaysShowVoiceControls();
+  const handleLeaveVoice = useCallback(() => {
+    void leaveVoice();
+  }, []);
 
   const permissions = useMemo(
     () => ({
@@ -67,8 +72,8 @@ const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
       >
         <ControlToggleButton
           enabled={ownVoiceState.micMuted}
-          enabledLabel="Unmute"
-          disabledLabel="Mute"
+          enabledLabel={t('unmute')}
+          disabledLabel={t('mute')}
           enabledIcon={MicOff}
           disabledIcon={Mic}
           enabledClassName="bg-red-500/20 text-red-500 hover:bg-red-500/30 hover:text-red-500"
@@ -78,8 +83,8 @@ const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
 
         <ControlToggleButton
           enabled={ownVoiceState.soundMuted}
-          enabledLabel="Undeafen"
-          disabledLabel="Deafen"
+          enabledLabel={t('undeafen')}
+          disabledLabel={t('deafen')}
           enabledIcon={HeadphoneOff}
           disabledIcon={Headphones}
           enabledClassName="bg-red-500/20 text-red-500 hover:bg-red-500/30 hover:text-red-500"
@@ -90,8 +95,8 @@ const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
 
         <ControlToggleButton
           enabled={ownVoiceState.webcamEnabled}
-          enabledLabel="Stop Video"
-          disabledLabel="Start Video"
+          enabledLabel={t('stopVideo')}
+          disabledLabel={t('startVideo')}
           enabledIcon={Video}
           disabledIcon={VideoOff}
           enabledClassName="bg-green-500/20 text-green-500 hover:bg-green-500/30 hover:text-green-500"
@@ -102,8 +107,8 @@ const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
         {isScreenShareSupported && (
           <ControlToggleButton
             enabled={ownVoiceState.sharingScreen}
-            enabledLabel="Stop Sharing"
-            disabledLabel="Share Screen"
+            enabledLabel={t('stopSharing')}
+            disabledLabel={t('shareScreen')}
             enabledIcon={ScreenShareOff}
             disabledIcon={Monitor}
             enabledClassName="bg-blue-500/20 text-blue-500 hover:bg-blue-500/30 hover:text-blue-500"
@@ -112,15 +117,15 @@ const ControlsBar = memo(({ channelId }: TControlsBarProps) => {
           />
         )}
       </div>
-      <Tooltip content="Disconnect">
+      <Tooltip content={t('disconnect')}>
         <Button
           className={cn(
             'inline-flex h-full min-w-11 items-center justify-center rounded px-3 border border-border',
             'pointer-events-auto text-white shadow-xl transition-all',
             'bg-[#ec4245] hover:bg-[#da373c]'
           )}
-          onClick={() => leaveVoice()}
-          aria-label="Disconnect"
+          onClick={handleLeaveVoice}
+          aria-label={t('disconnect')}
         >
           <PhoneOff className="size-4" fill="currentColor" />
         </Button>

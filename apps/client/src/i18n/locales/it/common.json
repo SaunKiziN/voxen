@@ -84,5 +84,22 @@
   "searchResults": "Risultati ricerca ({{count}})",
   "wasReactedBy": "ha ricevuto una reazione da {{reacters}}.",
   "andMore": "e altri {{count}}",
-  "toggleParticipants": "Mostra/nascondi partecipanti"
+  "toggleParticipants": "Mostra/nascondi partecipanti",
+  "typeAMessage": "Scrivi un messaggio...",
+  "messageChannel": "Messaggio in \"{{name}}\"",
+  "status_online": "Online",
+  "status_idle": "Inattivo",
+  "status_offline": "Offline",
+  "failedLoadServerInfo": "Impossibile caricare le informazioni del server",
+  "browserNotificationDmTitle": "{{author}} (DM)",
+  "browserNotificationChannelTitle": "{{author}} in #{{channel}}",
+  "browserNotificationAttachment": "Ha inviato un allegato",
+  "deletedUser": "Utente eliminato",
+  "openInNewTab": "Apri in una nuova scheda",
+  "commandStatusCompleted": "Completato",
+  "commandStatusFailed": "Non riuscito",
+  "commandStatusPending": "In sospeso",
+  "responseLabel": "Risposta",
+  "ownerGranted": "Ora sei proprietario di questo server",
+  "invalidAccessToken": "Token di accesso non valido"
 }

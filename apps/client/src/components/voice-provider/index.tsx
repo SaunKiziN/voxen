@@ -32,6 +32,7 @@ import {
   type TStreamQualityLayer,
   type TVoiceUserState
 } from '@sharkord/shared';
+import i18n from 'i18next';
 import { Device } from 'mediasoup-client';
 import type {
   ProducerOptions,
@@ -577,7 +578,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
               }
             );
             markNoiseGateWorkletUnavailable(
-              'Failed to initialize the noise gate audio processor.'
+              i18n.t('settings:noiseGateProcessorFailed')
             );
           }
         } else if (shouldUseNoiseGate && !noiseGateAvailability.available) {

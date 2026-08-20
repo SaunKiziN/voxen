@@ -12,6 +12,7 @@ import {
 } from '@sharkord/ui';
 import { Volume2, VolumeX } from 'lucide-react';
 import { memo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TVolumeButtonProps = {
   volumeKey: TVolumeKey;
@@ -21,6 +22,7 @@ type TVolumeButtonProps = {
 
 const VolumeButton = memo(
   ({ volumeKey, className, size = 'default' }: TVolumeButtonProps) => {
+    const { t } = useTranslation('sidebar');
     const { getVolume, setVolume, toggleMute } = useVolumeControl();
     const volume = getVolume(volumeKey);
     const isMuted = volume === 0;
@@ -42,7 +44,7 @@ const VolumeButton = memo(
           <IconButton
             variant={isMuted ? 'destructive' : 'ghost'}
             icon={isMuted ? VolumeX : Volume2}
-            title={isMuted ? 'Unmute' : 'Volume'}
+            title={isMuted ? t('unmute') : t('volume')}
             size={size}
             className={className}
           />
@@ -58,7 +60,7 @@ const VolumeButton = memo(
               variant="ghost"
               icon={isMuted ? VolumeX : Volume2}
               onClick={handleToggleMute}
-              title={isMuted ? 'Unmute' : 'Mute'}
+              title={isMuted ? t('unmute') : t('mute')}
               size="sm"
             />
             <Slider

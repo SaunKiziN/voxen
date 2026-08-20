@@ -8,6 +8,7 @@ import { StreamKind, type TExternalStream } from '@sharkord/shared';
 import { Avatar, AvatarFallback, AvatarImage, IconButton } from '@sharkord/ui';
 import { Headphones, Router, Video, ZoomIn, ZoomOut } from 'lucide-react';
 import { memo, useCallback, type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CardControls } from './card-controls';
 import { CardTheme } from './card-theme';
 import { FullscreenButton } from './fullscreen-button';
@@ -58,6 +59,8 @@ const ExternalStreamControls = memo(
     videoRef,
     streamId
   }: TExternalStreamControlsProps) => {
+    const { t } = useTranslation('sidebar');
+
     return (
       <CardControls>
         {hasAudio && (
@@ -83,7 +86,7 @@ const ExternalStreamControls = memo(
             variant={isZoomEnabled ? 'default' : 'ghost'}
             icon={isZoomEnabled ? ZoomOut : ZoomIn}
             onClick={handleToggleZoom}
-            title={isZoomEnabled ? 'Disable Zoom' : 'Enable Zoom'}
+            title={isZoomEnabled ? t('disableZoom') : t('enableZoom')}
             size="sm"
           />
         )}
@@ -115,6 +118,7 @@ const ExternalStreamCard = memo(
     className,
     showPinControls = true
   }: TExternalStreamCardProps) => {
+    const { t } = useTranslation('sidebar');
     const { externalVideoRef, hasExternalVideoStream, hasExternalAudioStream } =
       useVoiceRefs(streamId, stream.pluginId, stream.key);
 
@@ -191,8 +195,9 @@ const ExternalStreamCard = memo(
     const streamQuality = getStreamQuality(streamId, StreamKind.EXTERNAL_VIDEO);
 
     const qualityLabel = isSimulcastExternalVideoConsumer
-      ? getStreamQualityMetadataLabel(streamQuality, qualityLayers)
+      ? getStreamQualityMetadataLabel(streamQuality, qualityLayers, t)
       : null;
+    const externalStreamLabel = stream.title || t('externalStreamAlt');
 
     return (
       <div
@@ -271,7 +276,7 @@ const ExternalStreamCard = memo(
                 <Avatar className="w-20 h-20 border-2 border-green-500/50">
                   <AvatarImage
                     src={stream.avatarUrl}
-                    alt={stream.title || 'External Stream'}
+                    alt={externalStreamLabel}
                   />
                   <AvatarFallback className="bg-linear-to-br from-green-500/30 to-emerald-500/30">
                     <Headphones className="size-10 text-green-400" />
@@ -294,14 +299,14 @@ const ExternalStreamCard = memo(
             {stream.avatarUrl ? (
               <img
                 src={stream.avatarUrl}
-                alt={stream.title || 'External Stream'}
+                alt={externalStreamLabel}
                 className="h-5 shrink-0 rounded-full"
               />
             ) : (
               <Router className="size-3.5 text-purple-400 shrink-0" />
             )}
             <span className="text-white font-medium text-xs truncate">
-              {stream.title || 'External Stream'}
+              {externalStreamLabel}
             </span>
             {qualityLabel && (
               <span className="text-white/50 text-xs shrink-0">
@@ -323,7 +328,7 @@ const ExternalStreamCard = memo(
 
             {stream.pluginId && (
               <span className="text-white/50 text-[10px] shrink-0">
-                via {stream.pluginId}
+                {t('viaPlugin', { pluginId: stream.pluginId })}
               </span>
             )}
 

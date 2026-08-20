@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@sharkord/ui';
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TResolutionFpsControlProps = {
   resolution: string;
@@ -25,16 +26,22 @@ const ResolutionFpsControl = memo(
     onFramerateChange,
     disabled
   }: TResolutionFpsControlProps) => {
+    const { t } = useTranslation('settings');
+    const handleFramerateChange = useCallback(
+      (value: string) => onFramerateChange(+value),
+      [onFramerateChange]
+    );
+
     return (
       <div className="flex items-center gap-2">
-        <Label content="Resolution">
+        <Label content={t('resolutionLabel')}>
           <Select
             value={resolution}
             onValueChange={onResolutionChange}
             disabled={disabled}
           >
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Select the input device" />
+              <SelectValue placeholder={t('selectResolutionPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
@@ -50,24 +57,24 @@ const ResolutionFpsControl = memo(
           </Select>
         </Label>
 
-        <Label content="Framerate">
+        <Label content={t('framerateLabel')}>
           <Select
             value={framerate.toString()}
-            onValueChange={(value) => onFramerateChange(+value)}
+            onValueChange={handleFramerateChange}
             disabled={disabled}
           >
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select the input device" />
+              <SelectValue placeholder={t('selectFrameratePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="5">5 fps</SelectItem>
-                <SelectItem value="10">10 fps</SelectItem>
-                <SelectItem value="15">15 fps</SelectItem>
-                <SelectItem value="24">24 fps</SelectItem>
-                <SelectItem value="30">30 fps</SelectItem>
-                <SelectItem value="60">60 fps</SelectItem>
-                <SelectItem value="120">120 fps</SelectItem>
+                <SelectItem value="5">5 {t('fpsUnit')}</SelectItem>
+                <SelectItem value="10">10 {t('fpsUnit')}</SelectItem>
+                <SelectItem value="15">15 {t('fpsUnit')}</SelectItem>
+                <SelectItem value="24">24 {t('fpsUnit')}</SelectItem>
+                <SelectItem value="30">30 {t('fpsUnit')}</SelectItem>
+                <SelectItem value="60">60 {t('fpsUnit')}</SelectItem>
+                <SelectItem value="120">120 {t('fpsUnit')}</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

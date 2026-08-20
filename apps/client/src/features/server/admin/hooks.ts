@@ -35,12 +35,14 @@ import {
 } from '@sharkord/shared';
 import { filesize } from 'filesize';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useCan } from '../hooks';
 
 // TODO: review this whole file for optimizations and improvements
 
 export const useAdminGeneral = () => {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<TTrpcErrors>({});
   const [settings, setSettings] = useState({
@@ -96,12 +98,12 @@ export const useAdminGeneral = () => {
         enableSearch: settings.enableSearch,
         showWelcomeDialog: settings.showWelcomeDialog
       });
-      toast.success('Settings updated');
+      toast.success(t('settingsUpdated'));
     } catch (error) {
       console.error('Error updating settings:', error);
       setErrors(parseTrpcErrors(error));
     }
-  }, [settings]);
+  }, [settings, t]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onChange = useCallback((field: keyof typeof settings, value: any) => {
@@ -125,6 +127,7 @@ export const useAdminGeneral = () => {
 };
 
 export const useAdminUpdates = () => {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<TTrpcErrors>({});
   const [hasUpdate, setHasUpdate] = useState(false);
@@ -155,11 +158,10 @@ export const useAdminUpdates = () => {
 
   const update = useCallback(async () => {
     const answer = await requestConfirmation({
-      title: 'Are you sure you want to update the server?',
-      message:
-        'This will download and install the latest version of the server. The server will be restarted during the process, which may cause temporary downtime.',
-      confirmLabel: 'Update',
-      cancelLabel: 'Cancel'
+      title: t('serverUpdateConfirmTitle'),
+      message: t('serverUpdateConfirmMessage'),
+      confirmLabel: t('serverUpdateConfirmLabel'),
+      cancelLabel: t('cancel')
     });
 
     if (!answer) return;
@@ -169,12 +171,12 @@ export const useAdminUpdates = () => {
     try {
       trpc.others.updateServer.mutate();
 
-      toast.success('Server update initiated');
+      toast.success(t('serverUpdateInitiated'));
     } catch (error) {
       console.error('Error updating server:', error);
       setErrors(parseTrpcErrors(error));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchUpdate();
@@ -254,6 +256,7 @@ export const useHasUpdates = () => {
 };
 
 export const useAdminChannelGeneral = (channelId: number) => {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<TTrpcErrors>({});
   const [channel, setChannel] = useState<TChannel | undefined>(undefined);
@@ -279,12 +282,12 @@ export const useAdminChannelGeneral = (channelId: number) => {
         private: channel?.private ?? false
       });
 
-      toast.success('Channel updated');
+      toast.success(t('channelUpdated'));
     } catch (error) {
       console.error('Error updating channel:', error);
       setErrors(parseTrpcErrors(error));
     }
-  }, [channel, channelId]);
+  }, [channel, channelId, t]);
 
   const onChange = useCallback(
     (field: keyof TChannel, value: string | null | boolean) => {
@@ -310,6 +313,7 @@ export const useAdminChannelGeneral = (channelId: number) => {
 };
 
 export const useAdminCategoryGeneral = (categoryId: number) => {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<TTrpcErrors>({});
   const [category, setCategory] = useState<TCategory | undefined>(undefined);
@@ -333,12 +337,12 @@ export const useAdminCategoryGeneral = (categoryId: number) => {
         name: category?.name ?? ''
       });
 
-      toast.success('Category updated');
+      toast.success(t('categoryUpdated'));
     } catch (error) {
       console.error('Error updating category:', error);
       setErrors(parseTrpcErrors(error));
     }
-  }, [category, categoryId]);
+  }, [category, categoryId, t]);
 
   const onChange = useCallback(
     (field: keyof TCategory, value: string | null) => {
@@ -440,6 +444,7 @@ export const useAdminRoles = () => {
 };
 
 export const useAdminStorage = () => {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(true);
   const { values, setValues, setTrpcErrors, r, onChange } =
     useForm<TStorageSettings>({
@@ -495,12 +500,12 @@ export const useAdminStorage = () => {
         storageImageOptimizationEnabled: values.storageImageOptimizationEnabled,
         storageImageOptimizationQuality: values.storageImageOptimizationQuality
       });
-      toast.success('Storage settings updated');
+      toast.success(t('storageSettingsUpdated'));
     } catch (error) {
       console.error('Error updating storage settings:', error);
       setTrpcErrors(error);
     }
-  }, [values, setTrpcErrors]);
+  }, [values, setTrpcErrors, t]);
 
   const labels = useMemo(() => {
     return {

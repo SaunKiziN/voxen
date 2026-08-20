@@ -1,0 +1,16 @@
+{
+  "identityLabel": "Identidade",
+  "identityHelp": "Um identificador único para sua conta neste servidor. Você pode usar o que preferir, como um e-mail ou nome de usuário. Isso não será exibido publicamente.",
+  "passwordLabel": "Senha",
+  "autoLoginLabel": "Entrar automaticamente",
+  "insecureTitle": "Conexão insegura",
+  "insecureDesc": "Você está acessando o servidor por uma conexão insegura (HTTP). Por padrão, os navegadores bloqueiam o acesso a dispositivos de mídia, como câmera e microfone, em origens inseguras. Isso significa que você não poderá usar vídeo ou chat de voz enquanto estiver conectado ao servidor por HTTP. Se você administra o servidor, configure HTTPS seguindo as instruções na documentação.",
+  "connectBtn": "Conectar",
+  "registrationDisabled": "Novos cadastros estão desativados no momento. Se você ainda não tem uma conta, precisa ser convidado por uma pessoa que já esteja no servidor.",
+  "invitedTitle": "Você recebeu um convite para entrar neste servidor",
+  "inviteCode": "Código do convite: {{code}}",
+  "connectError": "Não foi possível conectar: {{message}}",
+  "loggingInAutomatically": "Entrando automaticamente...",
+  "loadingApp": "Carregando VOXEN",
+  "loadingPlugins": "Carregando plugins"
+}
