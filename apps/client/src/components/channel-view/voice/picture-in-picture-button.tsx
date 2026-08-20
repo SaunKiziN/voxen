@@ -1,6 +1,7 @@
 import { IconButton, type TIconButtonSize } from '@sharkord/ui';
 import { PictureInPicture2 } from 'lucide-react';
 import { memo, type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePictureInPicture } from './hooks/use-picture-in-picture';
 
 type TPictureInPictureButtonProps = {
@@ -17,6 +18,7 @@ const PictureInPictureButton = memo(
     className,
     size = 'default'
   }: TPictureInPictureButtonProps) => {
+    const { t } = useTranslation('sidebar');
     const { isSupported, isActive, togglePictureInPicture } =
       usePictureInPicture(videoRef, enabled);
 
@@ -28,7 +30,7 @@ const PictureInPictureButton = memo(
         variant={isActive ? 'default' : 'ghost'}
         icon={PictureInPicture2}
         onClick={togglePictureInPicture}
-        title={isActive ? 'Exit Picture-in-Picture' : 'Picture-in-Picture'}
+        title={isActive ? t('exitPictureInPicture') : t('pictureInPicture')}
         size={size}
         className={className}
       />

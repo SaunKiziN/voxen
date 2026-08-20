@@ -6,6 +6,7 @@ import { getTrpcError, type TJoinedPublicUser } from '@sharkord/shared';
 import { Button, Group } from '@sharkord/ui';
 import { Upload } from 'lucide-react';
 import { memo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 type TAvatarManagerProps = {
@@ -13,6 +14,7 @@ type TAvatarManagerProps = {
 };
 
 const AvatarManager = memo(({ user }: TAvatarManagerProps) => {
+  const { t } = useTranslation('settings');
   const openFilePicker = useFilePicker();
 
   const removeAvatar = useCallback(async () => {
@@ -21,11 +23,11 @@ const AvatarManager = memo(({ user }: TAvatarManagerProps) => {
     try {
       await trpc.users.changeAvatar.mutate({ fileId: undefined });
 
-      toast.success('Avatar removed successfully!');
+      toast.success(t('avatarRemoved'));
     } catch (error) {
-      toast.error(getTrpcError(error, 'Failed to remove avatar'));
+      toast.error(getTrpcError(error, t('failedRemoveAvatar')));
     }
-  }, []);
+  }, [t]);
 
   const onAvatarClick = useCallback(async () => {
     const trpc = getTRPCClient();
@@ -41,14 +43,14 @@ const AvatarManager = memo(({ user }: TAvatarManagerProps) => {
 
       await trpc.users.changeAvatar.mutate({ fileId: temporaryFile.id });
 
-      toast.success('Avatar updated successfully!');
+      toast.success(t('avatarUpdated'));
     } catch (error) {
-      toast.error(getTrpcError(error, 'Failed to update avatar'));
+      toast.error(getTrpcError(error, t('failedUpdateAvatar')));
     }
-  }, [openFilePicker]);
+  }, [openFilePicker, t]);
 
   return (
-    <Group label="Avatar">
+    <Group label={t('avatarLabel')}>
       <div className="space-y-2">
         <div
           className="relative group cursor-pointer w-32 h-32"
@@ -70,7 +72,7 @@ const AvatarManager = memo(({ user }: TAvatarManagerProps) => {
       {user.avatarId && (
         <div>
           <Button size="sm" variant="outline" onClick={removeAvatar}>
-            Remove avatar
+            {t('removeAvatar')}
           </Button>
         </div>
       )}

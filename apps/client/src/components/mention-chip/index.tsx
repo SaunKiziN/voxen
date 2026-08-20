@@ -2,6 +2,7 @@ import { useOwnUserId, useUserById } from '@/features/server/users/hooks';
 import { getRenderedUsername } from '@/helpers/get-rendered-username';
 import { cn } from '@/lib/utils';
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserPopover } from '../user-popover';
 
 type TMentionChipProps = {
@@ -10,11 +11,12 @@ type TMentionChipProps = {
 };
 
 const MentionChip = memo(({ userId, label: labelProp }: TMentionChipProps) => {
+  const { t } = useTranslation();
   const user = useUserById(userId);
   const ownUserId = useOwnUserId();
   const isOwnMention = ownUserId === userId;
   const label =
-    labelProp ?? (user ? getRenderedUsername(user) : 'Deleted User');
+    labelProp ?? (user ? getRenderedUsername(user) : t('deletedUser'));
 
   return (
     <UserPopover userId={userId}>

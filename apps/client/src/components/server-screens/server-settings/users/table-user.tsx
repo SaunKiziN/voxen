@@ -27,6 +27,7 @@ type TTableUserProps = {
 
 const TableUser = memo(({ user, refetch }: TTableUserProps) => {
   const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   const dateLocale = useDateLocale();
   const roles = useUserRoles(user.id);
   const status = useUserStatus(user.id);
@@ -104,7 +105,7 @@ const TableUser = memo(({ user, refetch }: TTableUserProps) => {
               'text-yellow-500': status === UserStatus.IDLE
             })}
           >
-            {status}
+            {tCommon(`status_${status}`)}
           </span>
         </div>
 

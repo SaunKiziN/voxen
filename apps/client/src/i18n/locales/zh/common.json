@@ -84,5 +84,22 @@
   "searchResults": "搜索结果（{{count}}）",
   "wasReactedBy": "{{reacters}} 做出了反应。",
   "andMore": "以及其他 {{count}} 人",
-  "toggleParticipants": "显示/隐藏参与者"
+  "toggleParticipants": "显示/隐藏参与者",
+  "typeAMessage": "输入消息...",
+  "messageChannel": "给 \"{{name}}\" 发消息",
+  "status_online": "在线",
+  "status_idle": "空闲",
+  "status_offline": "离线",
+  "failedLoadServerInfo": "无法加载服务器信息",
+  "browserNotificationDmTitle": "{{author}}（私信）",
+  "browserNotificationChannelTitle": "{{author}} 在 #{{channel}}",
+  "browserNotificationAttachment": "发送了一个附件",
+  "deletedUser": "已删除用户",
+  "openInNewTab": "在新标签页中打开",
+  "commandStatusCompleted": "已完成",
+  "commandStatusFailed": "失败",
+  "commandStatusPending": "待处理",
+  "responseLabel": "响应",
+  "ownerGranted": "你现在是此服务器的所有者",
+  "invalidAccessToken": "访问令牌无效"
 }

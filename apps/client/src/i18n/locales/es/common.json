@@ -84,5 +84,22 @@
   "searchResults": "Resultados de búsqueda ({{count}})",
   "wasReactedBy": "ha sido reaccionado por {{reacters}}.",
   "andMore": "y {{count}} más",
-  "toggleParticipants": "Mostrar/ocultar participantes"
+  "toggleParticipants": "Mostrar/ocultar participantes",
+  "typeAMessage": "Escribe un mensaje...",
+  "messageChannel": "Mensaje en \"{{name}}\"",
+  "status_online": "En línea",
+  "status_idle": "Ausente",
+  "status_offline": "Sin conexión",
+  "failedLoadServerInfo": "No se pudo cargar la información del servidor",
+  "browserNotificationDmTitle": "{{author}} (MD)",
+  "browserNotificationChannelTitle": "{{author}} en #{{channel}}",
+  "browserNotificationAttachment": "Envió un archivo adjunto",
+  "deletedUser": "Usuario eliminado",
+  "openInNewTab": "Abrir en una pestaña nueva",
+  "commandStatusCompleted": "Completado",
+  "commandStatusFailed": "Falló",
+  "commandStatusPending": "Pendiente",
+  "responseLabel": "Respuesta",
+  "ownerGranted": "Ahora eres propietario de este servidor",
+  "invalidAccessToken": "Token de acceso no válido"
 }

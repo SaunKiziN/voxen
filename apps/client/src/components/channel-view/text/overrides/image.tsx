@@ -1,6 +1,7 @@
 import { FullScreenImage } from '@/components/fullscreen-image/content';
 import { Skeleton } from '@sharkord/ui';
 import { memo, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OverrideLayout } from './layout';
 import { LinkOverride } from './link';
 
@@ -11,6 +12,7 @@ type TImageOverrideProps = {
 };
 
 const ImageOverride = memo(({ src, alt }: TImageOverrideProps) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -55,7 +57,7 @@ const ImageOverride = memo(({ src, alt }: TImageOverrideProps) => {
         />
       )}
 
-      <LinkOverride link={src} label="Open in new tab" />
+      <LinkOverride link={src} label={t('openInNewTab')} />
     </OverrideLayout>
   );
 });

@@ -7,6 +7,7 @@ import {
 } from '@sharkord/ui';
 import { Settings, Volume2, VolumeX } from 'lucide-react';
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TStreamSettingsPopoverProps = {
   volume: number;
@@ -22,13 +23,15 @@ const StreamSettingsPopover = memo(
     onVolumeChange,
     onMuteToggle
   }: TStreamSettingsPopoverProps) => {
+    const { t } = useTranslation('sidebar');
+
     return (
       <Popover>
         <PopoverTrigger asChild>
           <IconButton
             variant="ghost"
             icon={Settings}
-            title="Stream Settings"
+            title={t('streamSettings')}
             size="sm"
           />
         </PopoverTrigger>
@@ -40,14 +43,14 @@ const StreamSettingsPopover = memo(
         >
           <div className="space-y-3">
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Volume
+              {t('volume')}
             </div>
             <div className="flex items-center gap-2">
               <IconButton
                 variant="ghost"
                 icon={isMuted ? VolumeX : Volume2}
                 onClick={onMuteToggle}
-                title={isMuted ? 'Unmute' : 'Mute'}
+                title={isMuted ? t('unmute') : t('mute')}
                 size="sm"
                 className={isMuted ? 'text-red-400' : ''}
               />

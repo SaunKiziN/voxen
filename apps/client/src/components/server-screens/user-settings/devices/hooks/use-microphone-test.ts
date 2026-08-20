@@ -17,6 +17,7 @@ import { createNsChain } from '@/helpers/audio-worklet/ns-worklet';
 
 import { NoiseSuppression } from '@/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TPermissionState = 'unknown' | 'granted' | 'denied';
 
@@ -45,26 +46,6 @@ const isPermissionDeniedError = (error: unknown) =>
   error instanceof DOMException &&
   (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError');
 
-const getMicrophoneErrorMessage = (error: unknown) => {
-  if (!(error instanceof DOMException)) {
-    return 'Failed to access microphone.';
-  }
-
-  switch (error.name) {
-    case 'NotAllowedError':
-    case 'PermissionDeniedError':
-      return 'Microphone permission was denied.';
-    case 'NotFoundError':
-      return 'No microphone was found.';
-    case 'NotReadableError':
-      return 'Microphone is already in use by another application.';
-    case 'OverconstrainedError':
-      return 'Selected microphone is unavailable.';
-    default:
-      return 'Failed to access microphone.';
-  }
-};
-
 const useMicrophoneTest = ({
   microphoneId,
   playbackId,
@@ -74,6 +55,7 @@ const useMicrophoneTest = ({
   noiseGateEnabled,
   noiseGateThresholdDb
 }: TUseMicrophoneTestParams) => {
+  const { t } = useTranslation('settings');
   const [permissionState, setPermissionState] =
     useState<TPermissionState>('unknown');
   const [isTesting, setIsTesting] = useState(false);
@@ -124,6 +106,29 @@ const useMicrophoneTest = ({
       channelCount: 1
     };
   }, [microphoneId, autoGainControl, echoCancellation, noiseSuppression]);
+
+  const getMicrophoneErrorMessage = useCallback(
+    (error: unknown) => {
+      if (!(error instanceof DOMException)) {
+        return t('microphoneAccessFailed');
+      }
+
+      switch (error.name) {
+        case 'NotAllowedError':
+        case 'PermissionDeniedError':
+          return t('microphonePermissionDenied');
+        case 'NotFoundError':
+          return t('microphoneNotFound');
+        case 'NotReadableError':
+          return t('microphoneInUse');
+        case 'OverconstrainedError':
+          return t('microphoneUnavailable');
+        default:
+          return t('microphoneAccessFailed');
+      }
+    },
+    [t]
+  );
 
   const stopStreamTracks = useCallback((stream: MediaStream | null) => {
     stream?.getTracks().forEach((track) => track.stop());
@@ -367,9 +372,7 @@ const useMicrophoneTest = ({
               error
             );
 
-            markNoiseGateWorkletUnavailable(
-              'Failed to initialize the noise gate audio processor.'
-            );
+            markNoiseGateWorkletUnavailable(t('noiseGateProcessorFailed'));
           }
         }
 
@@ -456,11 +459,13 @@ const useMicrophoneTest = ({
     [
       cleanup,
       getAudioConstraints,
+      getMicrophoneErrorMessage,
       noiseSuppression,
       playbackId,
       setAudioLevelFromDecibels,
       startAnalyserMeter,
-      stopStreamTracks
+      stopStreamTracks,
+      t
     ]
   );
 
@@ -488,7 +493,7 @@ const useMicrophoneTest = ({
         }
       }
     },
-    [getAudioConstraints, stopStreamTracks]
+    [getAudioConstraints, getMicrophoneErrorMessage, stopStreamTracks]
   );
 
   const startTest = useCallback(async () => {

@@ -65,7 +65,7 @@ const CreateChannelDialog = memo(
   }: TCreateChannelDialogProps) => {
     const { t } = useTranslation('dialogs');
     const [channelType, setChannelType] = useState(defaultChannelType);
-    const [name, setName] = useState('New Channel');
+    const [name, setName] = useState(() => t('newChannelDefaultName'));
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<TTrpcErrors>({});
 

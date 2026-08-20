@@ -16,6 +16,8 @@ import {
 } from '@sharkord/ui';
 import { Gauge } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { getStreamQualityLayerLabel } from './quality-options';
 
 type TQualityButtonProps = {
   streamId: number;
@@ -33,6 +35,7 @@ const QualityButton = memo(
     className,
     size = 'sm'
   }: TQualityButtonProps) => {
+    const { t } = useTranslation('sidebar');
     const { setStreamQuality } = useVoice();
     const [isPending, setIsPending] = useState(false);
 
@@ -70,8 +73,10 @@ const QualityButton = memo(
             icon={Gauge}
             title={
               disabled
-                ? 'Quality selection unavailable'
-                : `Quality: ${qualityLabel ?? 'Auto'}`
+                ? t('qualitySelectionUnavailable')
+                : t('qualityLabel', {
+                    quality: qualityLabel ?? t('qualityAuto')
+                  })
             }
             size={size}
             className={className}
@@ -94,11 +99,11 @@ const QualityButton = memo(
                 value={`layer-${layer.spatialLayer}`}
                 disabled={isDisabled}
               >
-                {layer.label}
+                {getStreamQualityLayerLabel(layer.label, t)}
               </DropdownMenuRadioItem>
             ))}
             <DropdownMenuRadioItem value="auto" disabled={isDisabled}>
-              Auto
+              {t('qualityAuto')}
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>

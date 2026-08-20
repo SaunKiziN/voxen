@@ -12,6 +12,7 @@ import {
   type TExternalStream,
   type TVoiceUserState
 } from '@sharkord/shared';
+import i18n from 'i18next';
 import type { RtpCapabilities } from 'mediasoup-client/types';
 import { toast } from 'sonner';
 import {
@@ -169,7 +170,7 @@ export const joinVoice = async (
 
     return routerRtpCapabilities;
   } catch (error) {
-    toast.error(getTrpcError(error, 'Failed to join voice channel'));
+    toast.error(getTrpcError(error, i18n.t('sidebar:failedJoinVoiceChannel')));
   }
 
   return undefined;
@@ -213,7 +214,7 @@ export const leaveVoice = async (options?: {
     await client.voice.leave.mutate();
     playSound(SoundType.OWN_USER_LEFT_VOICE_CHANNEL);
   } catch (error) {
-    toast.error(getTrpcError(error, 'Failed to leave voice channel'));
+    toast.error(getTrpcError(error, i18n.t('sidebar:failedLeaveVoiceChannel')));
   }
 };
 

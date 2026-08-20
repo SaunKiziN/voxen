@@ -8,6 +8,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OverrideLayout } from './layout';
 
 type TCommandOverrideProps = {
@@ -15,6 +16,7 @@ type TCommandOverrideProps = {
 };
 
 const CommandOverride = memo(({ command }: TCommandOverrideProps) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const formatValue = useCallback((value: unknown): string => {
@@ -46,14 +48,14 @@ const CommandOverride = memo(({ command }: TCommandOverrideProps) => {
   const getStatusText = useCallback(() => {
     switch (command.status) {
       case 'completed':
-        return 'Completed';
+        return t('commandStatusCompleted');
       case 'failed':
-        return 'Failed';
+        return t('commandStatusFailed');
       case 'pending':
       default:
-        return 'Pending';
+        return t('commandStatusPending');
     }
-  }, [command.status]);
+  }, [command.status, t]);
 
   return (
     <OverrideLayout>
@@ -114,7 +116,7 @@ const CommandOverride = memo(({ command }: TCommandOverrideProps) => {
                   <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
                 )}
                 <span className="text-xs font-medium text-muted-foreground">
-                  Response
+                  {t('responseLabel')}
                 </span>
               </button>
 

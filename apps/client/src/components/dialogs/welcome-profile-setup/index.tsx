@@ -151,7 +151,7 @@ const WelcomeProfileSetupDialog = memo(
                 {ownPublicUser.banner ? (
                   <img
                     src={getFileUrl(ownPublicUser.banner)}
-                    alt="User banner"
+                    alt={t('welcomeUserBannerAlt')}
                     className="w-full h-28 object-cover transition-opacity group-hover:opacity-70"
                   />
                 ) : (

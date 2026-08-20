@@ -8,6 +8,7 @@ import {
 } from '@/helpers/storage';
 import type { TMessageJumpToTarget } from '@/types';
 import type { TServerInfo } from '@sharkord/shared';
+import i18n from 'i18next';
 import { toast } from 'sonner';
 import { markChannelAsRead, setInfo } from '../server/actions';
 import { store } from '../store';
@@ -83,7 +84,7 @@ export const loadApp = async () => {
 
   if (!info) {
     console.error('Failed to load server info during app load');
-    toast.error('Failed to load server info');
+    toast.error(i18n.t('common:failedLoadServerInfo'));
     return;
   }
 

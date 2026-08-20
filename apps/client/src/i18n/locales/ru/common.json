@@ -84,5 +84,22 @@
   "searchResults": "Результаты поиска ({{count}})",
   "wasReactedBy": "на это отреагировали {{reacters}}.",
   "andMore": "и еще {{count}}",
-  "toggleParticipants": "Показать/скрыть участников"
+  "toggleParticipants": "Показать/скрыть участников",
+  "typeAMessage": "Введите сообщение...",
+  "messageChannel": "Сообщение в \"{{name}}\"",
+  "status_online": "В сети",
+  "status_idle": "Неактивен",
+  "status_offline": "Не в сети",
+  "failedLoadServerInfo": "Не удалось загрузить информацию о сервере",
+  "browserNotificationDmTitle": "{{author}} (ЛС)",
+  "browserNotificationChannelTitle": "{{author}} в #{{channel}}",
+  "browserNotificationAttachment": "Отправил(а) вложение",
+  "deletedUser": "Удаленный пользователь",
+  "openInNewTab": "Открыть в новой вкладке",
+  "commandStatusCompleted": "Выполнено",
+  "commandStatusFailed": "Ошибка",
+  "commandStatusPending": "Ожидает",
+  "responseLabel": "Ответ",
+  "ownerGranted": "Теперь вы владелец этого сервера",
+  "invalidAccessToken": "Недействительный токен доступа"
 }

@@ -21,7 +21,7 @@ const CreateCategoryDialog = memo(
   ({ isOpen, close }: TCreateCategoryDialogProps) => {
     const { t } = useTranslation('dialogs');
     const { values, r, setTrpcErrors } = useForm({
-      name: 'New Category'
+      name: t('newCategoryDefaultName')
     });
     const [loading, setLoading] = useState(false);
 

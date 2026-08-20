@@ -9,6 +9,8 @@ type TImagePickerProps = {
   onImageClick: () => Promise<void>;
   onRemoveImageClick?: () => Promise<void>;
   image: TFile | null;
+  imageAlt: string;
+  removeImageLabel: string;
   className?: string;
 };
 
@@ -17,6 +19,8 @@ const ImagePicker = memo(
     onImageClick,
     onRemoveImageClick,
     image,
+    imageAlt,
+    removeImageLabel,
     className
   }: TImagePickerProps) => {
     return (
@@ -29,7 +33,7 @@ const ImagePicker = memo(
             {image ? (
               <img
                 src={getFileUrl(image)}
-                alt="Image"
+                alt={imageAlt}
                 className={cn(
                   'w-80 h-24 object-cover rounded-md transition-opacity group-hover:opacity-70',
                   className
@@ -54,7 +58,7 @@ const ImagePicker = memo(
         {image && (
           <div>
             <Button size="sm" variant="outline" onClick={onRemoveImageClick}>
-              Remove image
+              {removeImageLabel}
             </Button>
           </div>
         )}

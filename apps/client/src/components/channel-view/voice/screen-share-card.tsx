@@ -8,6 +8,7 @@ import { StreamKind } from '@sharkord/shared';
 import { IconButton } from '@sharkord/ui';
 import { Monitor, ZoomIn, ZoomOut } from 'lucide-react';
 import { memo, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CardTheme } from './card-theme';
 import { FullscreenButton } from './fullscreen-button';
 import { cardControlClass, cardDensity } from './helpers';
@@ -40,6 +41,7 @@ const ScreenShareCard = memo(
     showPinControls = true,
     isAnyCardPinned = false
   }: TScreenShareCardProps) => {
+    const { t } = useTranslation('sidebar');
     const user = useUserById(userId);
     const ownUserId = useOwnUserId();
     const { getUserScreenVolumeKey } = useVolumeControl();
@@ -209,7 +211,7 @@ const ScreenShareCard = memo(
               variant={isZoomEnabled ? 'default' : 'ghost'}
               icon={isZoomEnabled ? ZoomOut : ZoomIn}
               onClick={handleToggleZoom}
-              title={isZoomEnabled ? 'Disable Zoom' : 'Enable Zoom'}
+              title={isZoomEnabled ? t('disableZoom') : t('enableZoom')}
               size={density.icon}
               className={cardControlClass(isCompact, isZoomEnabled)}
             />
@@ -239,7 +241,7 @@ const ScreenShareCard = memo(
           >
             <Monitor className="text-white shrink-0 size-3" />
             <p className={cn('leading-none truncate', density.label)}>
-              {user.name}'s screen
+              {t('userScreen', { name: user.name })}
               {(videoStats || codec) && (
                 <span className="text-muted-foreground text-xs ml-2 leading-none">
                   {codec}
