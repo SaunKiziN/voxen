@@ -53,12 +53,18 @@ const useVoiceControls = ({
   );
 
   const toggleMic = useCallback(async () => {
-    if (isTogglingMic.current) return;
+    if (isTogglingMic.current || isTogglingSound.current) return;
     const nextMicMuted = !ownVoiceState.micMuted;
-
-    if (ownVoiceState.soundMuted && !nextMicMuted) {
-      return;
-    }
+    const shouldUndeafenToSpeak = ownVoiceState.soundMuted && !nextMicMuted;
+    const nextVoiceState: TVoiceStateUpdate = shouldUndeafenToSpeak
+      ? { micMuted: false, soundMuted: false }
+      : { micMuted: nextMicMuted };
+    const rollbackVoiceState: TVoiceStateUpdate = shouldUndeafenToSpeak
+      ? {
+          micMuted: ownVoiceState.micMuted,
+          soundMuted: ownVoiceState.soundMuted
+        }
+      : { micMuted: ownVoiceState.micMuted };
 
     isTogglingMic.current = true;
 
@@ -68,7 +74,7 @@ const useVoiceControls = ({
       pendingMicRestoreStateRef.current = null;
     }
 
-    updateOwnVoiceState({ micMuted: nextMicMuted });
+    updateOwnVoiceState(nextVoiceState);
     playSound(
       nextMicMuted
         ? SoundType.OWN_USER_MUTED_MIC
@@ -83,17 +89,15 @@ const useVoiceControls = ({
     const trpc = getTRPCClient();
 
     try {
-      await trpc.voice.updateState.mutate({
-        micMuted: nextMicMuted
-      });
+      await trpc.voice.updateState.mutate(nextVoiceState);
 
-      if (!localAudioStream && !nextMicMuted) {
+      if (!localAudioStream && nextVoiceState.micMuted === false) {
         await startMicStream();
       }
     } catch (error) {
       pendingMicRestoreStateRef.current = previousPendingMicRestoreState;
 
-      updateOwnVoiceState({ micMuted: !nextMicMuted });
+      updateOwnVoiceState(rollbackVoiceState);
       toast.error(getTrpcError(error, t('failedUpdateMicrophoneState')));
     } finally {
       isTogglingMic.current = false;
@@ -108,7 +112,7 @@ const useVoiceControls = ({
   ]);
 
   const toggleSound = useCallback(async () => {
-    if (isTogglingSound.current) return;
+    if (isTogglingSound.current || isTogglingMic.current) return;
     isTogglingSound.current = true;
 
     const nextSoundMuted = !ownVoiceState.soundMuted;

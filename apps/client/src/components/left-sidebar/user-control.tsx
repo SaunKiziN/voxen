@@ -61,9 +61,7 @@ const UserControl = memo(() => {
           )}
           onClick={toggleMic}
           title={ownVoiceState.micMuted ? t('unmuteMic') : t('muteMic')}
-          disabled={
-            !channelCan(ChannelPermission.SPEAK) || ownVoiceState.soundMuted
-          }
+          disabled={!channelCan(ChannelPermission.SPEAK)}
         >
           {ownVoiceState.micMuted ? (
             <MicOff className="h-4 w-4" />
