@@ -5,6 +5,7 @@ import { NoiseSuppression } from '@/types';
 export type TNsChain = {
   outputTrack: MediaStreamTrack;
   contexts: AudioContext[];
+  nodes: AudioNode[];
 };
 
 const createNsChain = async (

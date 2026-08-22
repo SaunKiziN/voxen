@@ -5,11 +5,15 @@ import { SoundType } from '@/features/server/types';
 import { useOwnVoiceState } from '@/features/server/voice/hooks';
 import {
   clampMicrophoneDecibels,
+  createMicrophoneInputMeterSnapshot,
+  isInputSensitivityMode,
   MICROPHONE_GATE_CLOSE_HOLD_MS,
-  MICROPHONE_GATE_DEFAULT_THRESHOLD_DB
+  MICROPHONE_GATE_DEFAULT_THRESHOLD_DB,
+  MICROPHONE_INPUT_METER_UPDATE_INTERVAL_MS
 } from '@/helpers/audio-gate';
 import {
   createNoiseGateWorkletNode,
+  destroyNoiseGateWorkletNode,
   getNoiseGateWorkletAvailabilitySnapshot,
   markNoiseGateWorkletUnavailable,
   postNoiseGateWorkletConfig
@@ -22,9 +26,22 @@ import {
   getSuppressLocalAudioPlaybackSupport
 } from '@/helpers/get-display-media-support';
 import { getResWidthHeight } from '@/helpers/get-res-with-height';
+import { getMicrophoneAudioConstraints } from '@/helpers/microphone-constraints';
+import {
+  hasVoiceMicrophoneInputMeterSubscribers,
+  resetVoiceMicrophoneInputSnapshot,
+  setVoiceMicrophoneInputActiveStream,
+  setVoiceMicrophoneInputSnapshot,
+  subscribeVoiceMicrophoneInputMeterSubscribers
+} from '@/helpers/voice-microphone-input';
 import { useScreenShareSupport } from '@/hooks/use-screen-share-support';
 import { getTRPCClient } from '@/lib/trpc';
-import { NoiseSuppression, VideoCodec, type TStreamQuality } from '@/types';
+import {
+  InputSensitivityMode,
+  NoiseSuppression,
+  VideoCodec,
+  type TStreamQuality
+} from '@/types';
 import {
   DEFAULT_BITRATE,
   StreamKind,
@@ -46,7 +63,8 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState
+  useState,
+  useSyncExternalStore
 } from 'react';
 import { useDevices } from '../devices-provider/hooks/use-devices';
 import {
@@ -214,6 +232,11 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
   const ownVoiceState = useOwnVoiceState();
   const { devices } = useDevices();
   const { isScreenShareSupported } = useScreenShareSupport();
+  const shouldReportMicrophoneInputStatus = useSyncExternalStore(
+    subscribeVoiceMicrophoneInputMeterSubscribers,
+    hasVoiceMicrophoneInputMeterSubscribers,
+    hasVoiceMicrophoneInputMeterSubscribers
+  );
 
   const simulcastEnabled =
     !!webRtcSimulcastEnabled && !!devices.simulcastEnabled;
@@ -415,11 +438,16 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
   } = useTransportStats();
   const rawMicrophoneStreamRef = useRef<MediaStream | null>(null);
   const transmitMicrophoneTrackRef = useRef<MediaStreamTrack | null>(null);
+  const microphoneNoiseGateSourceNodeRef =
+    useRef<MediaStreamAudioSourceNode | null>(null);
+  const microphoneNoiseGateDestinationNodeRef =
+    useRef<MediaStreamAudioDestinationNode | null>(null);
   const microphoneNoiseGateAudioContextRef = useRef<AudioContext | null>(null);
   const microphoneNoiseGateWorkletNodeRef = useRef<AudioWorkletNode | null>(
     null
   );
   const nsAudioContextsRef = useRef<AudioContext[]>([]);
+  const nsAudioNodesRef = useRef<AudioNode[]>([]);
   const micMutedRef = useRef(ownVoiceState.micMuted);
 
   const syncTransmitMicrophoneTrackState = useCallback(() => {
@@ -436,14 +464,23 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
 
   const cleanupMicProcessingResources = useCallback(() => {
     if (microphoneNoiseGateWorkletNodeRef.current) {
-      microphoneNoiseGateWorkletNodeRef.current.disconnect();
+      destroyNoiseGateWorkletNode(microphoneNoiseGateWorkletNodeRef.current);
       microphoneNoiseGateWorkletNodeRef.current = null;
     }
+
+    microphoneNoiseGateSourceNodeRef.current?.disconnect();
+    microphoneNoiseGateSourceNodeRef.current = null;
+
+    microphoneNoiseGateDestinationNodeRef.current?.disconnect();
+    microphoneNoiseGateDestinationNodeRef.current = null;
 
     if (microphoneNoiseGateAudioContextRef.current) {
       microphoneNoiseGateAudioContextRef.current.close();
       microphoneNoiseGateAudioContextRef.current = null;
     }
+
+    nsAudioNodesRef.current.forEach((node) => node.disconnect());
+    nsAudioNodesRef.current = [];
 
     nsAudioContextsRef.current.forEach((ctx) => ctx.close());
     nsAudioContextsRef.current = [];
@@ -455,6 +492,196 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
 
     transmitMicrophoneTrackRef.current?.stop();
     transmitMicrophoneTrackRef.current = null;
+    setVoiceMicrophoneInputActiveStream(undefined);
+    resetVoiceMicrophoneInputSnapshot();
+  }, []);
+
+  const getInputSensitivityMode = useCallback(() => {
+    if (isInputSensitivityMode(devices.inputSensitivityMode)) {
+      return devices.inputSensitivityMode;
+    }
+
+    return devices.noiseGateEnabled
+      ? InputSensitivityMode.MANUAL
+      : InputSensitivityMode.OPEN;
+  }, [devices.inputSensitivityMode, devices.noiseGateEnabled]);
+
+  const handleMicrophoneInputStatus = useCallback((event: MessageEvent) => {
+    const data = event.data;
+
+    if (!data || typeof data !== 'object' || data.type !== 'status') {
+      return;
+    }
+
+    if (
+      typeof data.decibels !== 'number' ||
+      !Number.isFinite(data.decibels) ||
+      !isInputSensitivityMode(data.inputSensitivityMode)
+    ) {
+      return;
+    }
+
+    const currentLevelDb =
+      typeof data.currentLevelDb === 'number' &&
+      Number.isFinite(data.currentLevelDb)
+        ? data.currentLevelDb
+        : data.decibels;
+    const peakLevelDb =
+      typeof data.peakLevelDb === 'number' && Number.isFinite(data.peakLevelDb)
+        ? data.peakLevelDb
+        : data.decibels;
+
+    setVoiceMicrophoneInputSnapshot(
+      createMicrophoneInputMeterSnapshot({
+        decibels: peakLevelDb,
+        currentLevelDb,
+        peakLevelDb,
+        inputSensitivityMode: data.inputSensitivityMode,
+        thresholdDb:
+          typeof data.thresholdDb === 'number' &&
+          Number.isFinite(data.thresholdDb)
+            ? data.thresholdDb
+            : null,
+        noiseFloorDb:
+          typeof data.noiseFloorDb === 'number' &&
+          Number.isFinite(data.noiseFloorDb)
+            ? data.noiseFloorDb
+            : null,
+        ambientUpperDb:
+          typeof data.ambientUpperDb === 'number' &&
+          Number.isFinite(data.ambientUpperDb)
+            ? data.ambientUpperDb
+            : null,
+        gateOpen: typeof data.gateOpen === 'boolean' ? data.gateOpen : true,
+        vad2SpeechActive:
+          typeof data.vad2SpeechActive === 'boolean'
+            ? data.vad2SpeechActive
+            : null,
+        vad3SpeechActive:
+          typeof data.vad3SpeechActive === 'boolean'
+            ? data.vad3SpeechActive
+            : null,
+        snrDb:
+          typeof data.snrDb === 'number' && Number.isFinite(data.snrDb)
+            ? data.snrDb
+            : null,
+        strongSpeechEvidence:
+          typeof data.strongSpeechEvidence === 'boolean'
+            ? data.strongSpeechEvidence
+            : null,
+        speechEvidence:
+          typeof data.speechEvidence === 'boolean' ? data.speechEvidence : null,
+        eligibleToOpen:
+          typeof data.eligibleToOpen === 'boolean' ? data.eligibleToOpen : null,
+        recentVad3Speech:
+          typeof data.recentVad3Speech === 'boolean'
+            ? data.recentVad3Speech
+            : null,
+        timeSinceLastVad3SpeechMs:
+          typeof data.timeSinceLastVad3SpeechMs === 'number' &&
+          Number.isFinite(data.timeSinceLastVad3SpeechMs)
+            ? data.timeSinceLastVad3SpeechMs
+            : null,
+        vad2OnlyDurationMs:
+          typeof data.vad2OnlyDurationMs === 'number' &&
+          Number.isFinite(data.vad2OnlyDurationMs)
+            ? data.vad2OnlyDurationMs
+            : null,
+        candidateAuthenticatedSpeech:
+          typeof data.candidateAuthenticatedSpeech === 'boolean'
+            ? data.candidateAuthenticatedSpeech
+            : null,
+        candidateStrictOpen:
+          typeof data.candidateStrictOpen === 'boolean'
+            ? data.candidateStrictOpen
+            : null,
+        vad3Hits120Ms:
+          typeof data.vad3Hits120Ms === 'number' &&
+          Number.isFinite(data.vad3Hits120Ms)
+            ? data.vad3Hits120Ms
+            : null,
+        vad3Hits200Ms:
+          typeof data.vad3Hits200Ms === 'number' &&
+          Number.isFinite(data.vad3Hits200Ms)
+            ? data.vad3Hits200Ms
+            : null,
+        vad3ConsecutiveFrames:
+          typeof data.vad3ConsecutiveFrames === 'number' &&
+          Number.isFinite(data.vad3ConsecutiveFrames)
+            ? data.vad3ConsecutiveFrames
+            : null,
+        candidateBurstAAuthenticated:
+          typeof data.candidateBurstAAuthenticated === 'boolean'
+            ? data.candidateBurstAAuthenticated
+            : null,
+        candidateBurstBAuthenticated:
+          typeof data.candidateBurstBAuthenticated === 'boolean'
+            ? data.candidateBurstBAuthenticated
+            : null,
+        candidateBurstAOpen:
+          typeof data.candidateBurstAOpen === 'boolean'
+            ? data.candidateBurstAOpen
+            : null,
+        candidateBurstBOpen:
+          typeof data.candidateBurstBOpen === 'boolean'
+            ? data.candidateBurstBOpen
+            : null,
+        candidateBurstAOnsetMs:
+          typeof data.candidateBurstAOnsetMs === 'number' &&
+          Number.isFinite(data.candidateBurstAOnsetMs)
+            ? data.candidateBurstAOnsetMs
+            : null,
+        candidateBurstBOnsetMs:
+          typeof data.candidateBurstBOnsetMs === 'number' &&
+          Number.isFinite(data.candidateBurstBOnsetMs)
+            ? data.candidateBurstBOnsetMs
+            : null,
+        utteranceActive:
+          typeof data.utteranceActive === 'boolean'
+            ? data.utteranceActive
+            : null,
+        utteranceElapsedMs:
+          typeof data.utteranceElapsedMs === 'number' &&
+          Number.isFinite(data.utteranceElapsedMs)
+            ? data.utteranceElapsedMs
+            : null,
+        maxVad3Hits120SinceReport:
+          typeof data.maxVad3Hits120SinceReport === 'number' &&
+          Number.isFinite(data.maxVad3Hits120SinceReport)
+            ? data.maxVad3Hits120SinceReport
+            : null,
+        maxVad3Hits200SinceReport:
+          typeof data.maxVad3Hits200SinceReport === 'number' &&
+          Number.isFinite(data.maxVad3Hits200SinceReport)
+            ? data.maxVad3Hits200SinceReport
+            : null,
+        burstATriggeredSinceReport:
+          typeof data.burstATriggeredSinceReport === 'boolean'
+            ? data.burstATriggeredSinceReport
+            : null,
+        burstBTriggeredSinceReport:
+          typeof data.burstBTriggeredSinceReport === 'boolean'
+            ? data.burstBTriggeredSinceReport
+            : null,
+        backgroundFrozen:
+          typeof data.backgroundFrozen === 'boolean'
+            ? data.backgroundFrozen
+            : null,
+        digitalSilence:
+          typeof data.digitalSilence === 'boolean' ? data.digitalSilence : null,
+        vadSampleRate:
+          typeof data.vadSampleRate === 'number' &&
+          Number.isFinite(data.vadSampleRate)
+            ? data.vadSampleRate
+            : null,
+        vadFrameMs:
+          typeof data.vadFrameMs === 'number' &&
+          Number.isFinite(data.vadFrameMs)
+            ? data.vadFrameMs
+            : null,
+        source: 'voice'
+      })
+    );
   }, []);
 
   useEffect(() => {
@@ -466,10 +693,10 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     if (!microphoneNoiseGateWorkletNodeRef.current) return;
 
     postNoiseGateWorkletConfig(microphoneNoiseGateWorkletNodeRef.current, {
-      enabled: devices.noiseGateEnabled ?? true,
+      mode: getInputSensitivityMode(),
       holdMs: MICROPHONE_GATE_CLOSE_HOLD_MS
     });
-  }, [devices.noiseGateEnabled]);
+  }, [devices.inputSensitivityMode, getInputSensitivityMode]);
 
   useEffect(() => {
     if (!microphoneNoiseGateWorkletNodeRef.current) return;
@@ -481,6 +708,15 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     });
   }, [devices.noiseGateThresholdDb]);
 
+  useEffect(() => {
+    if (!microphoneNoiseGateWorkletNodeRef.current) return;
+
+    postNoiseGateWorkletConfig(microphoneNoiseGateWorkletNodeRef.current, {
+      reportStatus: shouldReportMicrophoneInputStatus,
+      statusUpdateIntervalMs: MICROPHONE_INPUT_METER_UPDATE_INTERVAL_MS
+    });
+  }, [shouldReportMicrophoneInputStatus]);
+
   const startMicStream = useCallback(async () => {
     try {
       logVoice('Starting microphone stream');
@@ -489,24 +725,13 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
       const useNsChain =
         devices.noiseSuppression === NoiseSuppression.DTLN ||
         devices.noiseSuppression === NoiseSuppression.RNNOISE;
-      const useStandardNs =
-        devices.noiseSuppression === NoiseSuppression.STANDARD;
-      const useDtln = devices.noiseSuppression === NoiseSuppression.DTLN;
-
-      const hasSpecificMic =
-        !!devices.microphoneId && devices.microphoneId !== 'default';
-
       const micStreamConstraints: MediaStreamConstraints = {
-        audio: {
-          deviceId: hasSpecificMic
-            ? { exact: devices.microphoneId }
-            : undefined,
+        audio: getMicrophoneAudioConstraints({
+          microphoneId: devices.microphoneId,
           autoGainControl: devices.autoGainControl,
           echoCancellation: devices.echoCancellation,
-          noiseSuppression: useStandardNs,
-          sampleRate: useDtln ? 16000 : undefined,
-          channelCount: 1
-        },
+          noiseSuppression: devices.noiseSuppression
+        }),
         video: false
       };
 
@@ -523,37 +748,75 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
       const rawAudioTrack = rawStream.getAudioTracks()[0];
 
       if (rawAudioTrack) {
-        const shouldUseNoiseGate = !!devices.noiseGateEnabled;
         const noiseGateAvailability = getNoiseGateWorkletAvailabilitySnapshot();
-        let transmitTrack: MediaStreamTrack = rawAudioTrack;
-        let transmitStream: MediaStream = rawStream;
+        const inputSensitivityMode = getInputSensitivityMode();
+        let processingTrack: MediaStreamTrack = rawAudioTrack;
+        let processingStream: MediaStream = rawStream;
 
-        if (shouldUseNoiseGate && noiseGateAvailability.available) {
+        rawMicrophoneStreamRef.current = rawStream;
+
+        if (useNsChain) {
+          logVoice('Setting up noise suppression', {
+            type: devices.noiseSuppression
+          });
+
+          try {
+            const chain = await createNsChain(
+              devices.noiseSuppression,
+              rawStream
+            );
+
+            nsAudioContextsRef.current = chain.contexts;
+            nsAudioNodesRef.current = chain.nodes;
+            processingTrack = chain.outputTrack;
+            processingStream = new MediaStream([chain.outputTrack]);
+            logVoice('Noise suppression chain ready');
+          } catch (nsError) {
+            logVoice('Failed to set up noise suppression', {
+              error: nsError
+            });
+          }
+        }
+
+        let transmitTrack: MediaStreamTrack = processingTrack;
+        let transmitStream: MediaStream = processingStream;
+
+        if (noiseGateAvailability.available) {
           let audioContext: AudioContext | null = null;
 
           try {
             audioContext = new window.AudioContext();
-            const source = audioContext.createMediaStreamSource(rawStream);
+            const source =
+              audioContext.createMediaStreamSource(processingStream);
             const noiseGateNode = await createNoiseGateWorkletNode(
               audioContext,
               {
-                enabled: true,
+                mode: inputSensitivityMode,
                 thresholdDb: clampMicrophoneDecibels(
                   devices.noiseGateThresholdDb ??
                     MICROPHONE_GATE_DEFAULT_THRESHOLD_DB
                 ),
-                holdMs: MICROPHONE_GATE_CLOSE_HOLD_MS
+                holdMs: MICROPHONE_GATE_CLOSE_HOLD_MS,
+                reportStatus: shouldReportMicrophoneInputStatus,
+                statusUpdateIntervalMs:
+                  MICROPHONE_INPUT_METER_UPDATE_INTERVAL_MS
               }
             );
             const destination = audioContext.createMediaStreamDestination();
 
+            noiseGateNode.port.onmessage = handleMicrophoneInputStatus;
             source.connect(noiseGateNode);
             noiseGateNode.connect(destination);
+
+            if (audioContext.state === 'suspended') {
+              await audioContext.resume();
+            }
 
             const processedTrack = destination.stream.getAudioTracks()[0];
 
             if (processedTrack) {
-              rawMicrophoneStreamRef.current = rawStream;
+              microphoneNoiseGateSourceNodeRef.current = source;
+              microphoneNoiseGateDestinationNodeRef.current = destination;
               microphoneNoiseGateAudioContextRef.current = audioContext;
               microphoneNoiseGateWorkletNodeRef.current = noiseGateNode;
               transmitTrack = processedTrack;
@@ -581,35 +844,21 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
               i18n.t('settings:noiseGateProcessorFailed')
             );
           }
-        } else if (shouldUseNoiseGate && !noiseGateAvailability.available) {
-          logVoice('Noise gate unavailable, using ungated microphone stream', {
-            reason: noiseGateAvailability.reason
-          });
-        }
-
-        if (useNsChain) {
-          logVoice('Setting up noise suppression', {
-            type: devices.noiseSuppression
-          });
-
-          try {
-            const chain = await createNsChain(
-              devices.noiseSuppression,
-              transmitStream
-            );
-            nsAudioContextsRef.current = chain.contexts;
-            transmitTrack = chain.outputTrack;
-            transmitStream = new MediaStream([chain.outputTrack]);
-            logVoice('Noise suppression chain ready');
-          } catch (nsError) {
-            logVoice('Failed to set up noise suppression', {
-              error: nsError
-            });
-          }
+        } else if (
+          inputSensitivityMode !== InputSensitivityMode.OPEN &&
+          !noiseGateAvailability.available
+        ) {
+          logVoice(
+            'Input sensitivity unavailable, using ungated microphone stream',
+            {
+              reason: noiseGateAvailability.reason
+            }
+          );
         }
 
         transmitMicrophoneTrackRef.current = transmitTrack;
         setLocalAudioStream(transmitStream);
+        setVoiceMicrophoneInputActiveStream(transmitStream);
         syncTransmitMicrophoneTrackState();
 
         logVoice('Obtained audio track', { audioTrack: rawAudioTrack });
@@ -670,11 +919,13 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     setLocalAudioStream,
     localAudioProducer,
     syncTransmitMicrophoneTrackState,
+    getInputSensitivityMode,
+    handleMicrophoneInputStatus,
+    shouldReportMicrophoneInputStatus,
     devices.microphoneId,
     devices.autoGainControl,
     devices.echoCancellation,
     devices.noiseSuppression,
-    devices.noiseGateEnabled,
     devices.noiseGateThresholdDb
   ]);
 

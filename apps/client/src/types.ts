@@ -48,6 +48,12 @@ export enum NoiseSuppression {
   DTLN = 'dtln'
 }
 
+export enum InputSensitivityMode {
+  AUTOMATIC = 'automatic',
+  MANUAL = 'manual',
+  OPEN = 'open'
+}
+
 export type TDeviceSettings = {
   microphoneId: string | undefined;
   playbackId: string | undefined;
@@ -57,6 +63,7 @@ export type TDeviceSettings = {
   echoCancellation: boolean;
   noiseSuppression: NoiseSuppression;
   autoGainControl: boolean;
+  inputSensitivityMode: InputSensitivityMode;
   noiseGateEnabled: boolean;
   noiseGateThresholdDb: number;
   shareSystemAudio: boolean;
