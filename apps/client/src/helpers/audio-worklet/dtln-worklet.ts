@@ -85,6 +85,7 @@ const waitForReady = (node: AudioWorkletNode) =>
 type TDtlnChain = {
   outputTrack: MediaStreamTrack;
   contexts: AudioContext[];
+  nodes: AudioNode[];
 };
 
 const createDtlnChain = async (
@@ -116,7 +117,11 @@ const createDtlnChain = async (
     throw new Error('DTLN chain produced no output track');
   }
 
-  return { outputTrack, contexts: [ctx] };
+  return {
+    outputTrack,
+    contexts: [ctx],
+    nodes: [source, workletNode, destination]
+  };
 };
 
 export { createDtlnChain, isDtlnWorkletSupported };

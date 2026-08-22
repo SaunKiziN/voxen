@@ -84,6 +84,7 @@ const waitForReady = (node: AudioWorkletNode) =>
 type TRnnoiseChain = {
   outputTrack: MediaStreamTrack;
   contexts: AudioContext[];
+  nodes: AudioNode[];
 };
 
 const createRnnoiseChain = async (
@@ -129,7 +130,11 @@ const createRnnoiseChain = async (
     throw new Error('RNNoise chain produced no output track');
   }
 
-  return { outputTrack, contexts: [ctx] };
+  return {
+    outputTrack,
+    contexts: [ctx],
+    nodes: [source, workletNode, destination]
+  };
 };
 
 export { createRnnoiseChain, isRnnoiseWorkletSupported };

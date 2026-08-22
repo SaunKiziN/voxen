@@ -4,7 +4,12 @@ import { closeServerScreens } from '@/features/server-screens/actions';
 import { useCurrentVoiceChannelId } from '@/features/server/channels/hooks';
 import { usePublicServerSettings } from '@/features/server/hooks';
 import { useOwnVoiceState } from '@/features/server/voice/hooks';
-import { MICROPHONE_GATE_DEFAULT_THRESHOLD_DB } from '@/helpers/audio-gate';
+import {
+  MICROPHONE_GATE_DEFAULT_THRESHOLD_DB,
+  clampMicrophoneDecibels,
+  inputSensitivityModeUsesGate,
+  isInputSensitivityMode
+} from '@/helpers/audio-gate';
 import {
   getNoiseGateWorkletAvailabilitySnapshot,
   subscribeNoiseGateWorkletAvailability
@@ -13,8 +18,20 @@ import {
   getRestrictOwnAudioSupport,
   getSuppressLocalAudioPlaybackSupport
 } from '@/helpers/get-display-media-support';
+import {
+  getVoiceMicrophoneInputActiveStream,
+  getVoiceMicrophoneInputSnapshot,
+  subscribeVoiceMicrophoneInputActiveStream,
+  subscribeVoiceMicrophoneInputSnapshot
+} from '@/helpers/voice-microphone-input';
 import { useForm } from '@/hooks/use-form';
-import { NoiseSuppression, Resolution, VideoCodec } from '@/types';
+import {
+  InputSensitivityMode,
+  NoiseSuppression,
+  Resolution,
+  VideoCodec,
+  type TDeviceSettings
+} from '@/types';
 import { DEFAULT_BITRATE } from '@sharkord/shared';
 import {
   Alert,
@@ -50,6 +67,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useMicrophoneInputMeter } from './hooks/use-microphone-input-meter';
 import { useMicrophoneTest } from './hooks/use-microphone-test';
 import { useWebcamTest } from './hooks/use-webcam-test';
 import { MicrophoneTestLevelBar } from './microphone-test-level-bar';
@@ -80,6 +98,11 @@ const Devices = memo(() => {
     getNoiseGateWorkletAvailabilitySnapshot,
     getNoiseGateWorkletAvailabilitySnapshot
   );
+  const activeVoiceMicrophoneInputStream = useSyncExternalStore(
+    subscribeVoiceMicrophoneInputActiveStream,
+    getVoiceMicrophoneInputActiveStream,
+    getVoiceMicrophoneInputActiveStream
+  );
   const isNoiseGateAvailable = noiseGateWorkletAvailability.available;
   const isRestrictOwnAudioSupported = useMemo(
     () => getRestrictOwnAudioSupport(),
@@ -89,12 +112,22 @@ const Devices = memo(() => {
     () => getSuppressLocalAudioPlaybackSupport(),
     []
   );
+  const hasMicrophones = inputDevices.length > 0;
+  const inputSensitivityMode = isInputSensitivityMode(
+    values.inputSensitivityMode
+  )
+    ? values.inputSensitivityMode
+    : InputSensitivityMode.AUTOMATIC;
+  const manualNoiseGateThresholdDb = clampMicrophoneDecibels(
+    values.noiseGateThresholdDb ?? MICROPHONE_GATE_DEFAULT_THRESHOLD_DB
+  );
+  const preserveFormOnSensitivityDevicesSyncRef = useRef(false);
 
   const {
     testAudioRef,
     permissionState,
     isTesting,
-    getAudioLevelSnapshot,
+    getMeterSnapshot: getMicrophoneTestMeterSnapshot,
     error: microphoneTestError,
     requestPermission,
     startTest,
@@ -105,10 +138,37 @@ const Devices = memo(() => {
     autoGainControl: !!values.autoGainControl,
     echoCancellation: !!values.echoCancellation,
     noiseSuppression: values.noiseSuppression,
-    noiseGateEnabled: !!values.noiseGateEnabled,
-    noiseGateThresholdDb:
-      values.noiseGateThresholdDb ?? MICROPHONE_GATE_DEFAULT_THRESHOLD_DB
+    inputSensitivityMode,
+    noiseGateThresholdDb: manualNoiseGateThresholdDb
   });
+  const shouldUseActiveVoiceMeter =
+    !!currentVoiceChannelId &&
+    !!activeVoiceMicrophoneInputStream &&
+    isNoiseGateAvailable &&
+    !isTesting;
+  const shouldUseVoiceStreamFallbackMeter =
+    !!currentVoiceChannelId &&
+    !!activeVoiceMicrophoneInputStream &&
+    !isNoiseGateAvailable &&
+    !isTesting;
+  const shouldUseSettingsMeter =
+    !currentVoiceChannelId &&
+    permissionState === 'granted' &&
+    !isTesting &&
+    hasMicrophones;
+  const { getMeterSnapshot: getSettingsMeterSnapshot, error: inputMeterError } =
+    useMicrophoneInputMeter({
+      enabled: shouldUseSettingsMeter || shouldUseVoiceStreamFallbackMeter,
+      sourceStream: shouldUseVoiceStreamFallbackMeter
+        ? activeVoiceMicrophoneInputStream
+        : undefined,
+      microphoneId: values.microphoneId,
+      autoGainControl: !!values.autoGainControl,
+      echoCancellation: !!values.echoCancellation,
+      noiseSuppression: values.noiseSuppression,
+      inputSensitivityMode,
+      noiseGateThresholdDb: manualNoiseGateThresholdDb
+    });
   const {
     testVideoRef,
     isStarting: isVideoStarting,
@@ -124,9 +184,40 @@ const Devices = memo(() => {
   });
 
   const saveDeviceSettings = useCallback(() => {
-    saveDevices(values);
+    saveDevices({
+      ...values,
+      inputSensitivityMode,
+      noiseGateEnabled: inputSensitivityModeUsesGate(inputSensitivityMode),
+      noiseGateThresholdDb: manualNoiseGateThresholdDb
+    });
     toast.success(t('deviceSettingsSaved'));
-  }, [saveDevices, values, t]);
+  }, [
+    saveDevices,
+    values,
+    inputSensitivityMode,
+    manualNoiseGateThresholdDb,
+    t
+  ]);
+
+  const saveInputSensitivitySettings = useCallback(
+    (
+      nextInputSensitivityMode: InputSensitivityMode,
+      nextNoiseGateThresholdDb: number
+    ) => {
+      const nextDevices: TDeviceSettings = {
+        ...devices,
+        inputSensitivityMode: nextInputSensitivityMode,
+        noiseGateEnabled: inputSensitivityModeUsesGate(
+          nextInputSensitivityMode
+        ),
+        noiseGateThresholdDb: clampMicrophoneDecibels(nextNoiseGateThresholdDb)
+      };
+
+      preserveFormOnSensitivityDevicesSyncRef.current = true;
+      saveDevices(nextDevices);
+    },
+    [devices, saveDevices]
+  );
   const didPrimeDevicesOnGrantedRef = useRef(false);
   const mutedByTestRef = useRef<{
     previousMicMuted: boolean;
@@ -160,6 +251,8 @@ const Devices = memo(() => {
   useEffect(() => {
     restoreVoiceStateAfterTestRef.current = restoreVoiceStateAfterTest;
   }, [restoreVoiceStateAfterTest]);
+
+  useEffect(() => subscribeVoiceMicrophoneInputSnapshot(() => {}), []);
 
   const startMicrophoneTest = useCallback(async () => {
     if (currentVoiceChannelId) {
@@ -205,6 +298,48 @@ const Devices = memo(() => {
     await loadDevices();
   }, [requestPermission, loadDevices]);
 
+  const handleInputSensitivityModeChange = useCallback(
+    (value: string) => {
+      const mode = isInputSensitivityMode(value)
+        ? value
+        : InputSensitivityMode.AUTOMATIC;
+      const noiseGateEnabled = inputSensitivityModeUsesGate(mode);
+
+      setValues((prev) => ({
+        ...prev,
+        inputSensitivityMode: mode,
+        noiseGateEnabled
+      }));
+      saveInputSensitivitySettings(mode, manualNoiseGateThresholdDb);
+    },
+    [manualNoiseGateThresholdDb, saveInputSensitivitySettings, setValues]
+  );
+
+  const handleManualThresholdChange = useCallback(
+    (value: number) => {
+      const thresholdDb = clampMicrophoneDecibels(value);
+
+      setValues((prev) => ({
+        ...prev,
+        noiseGateThresholdDb: thresholdDb
+      }));
+      saveInputSensitivitySettings(inputSensitivityMode, thresholdDb);
+    },
+    [inputSensitivityMode, saveInputSensitivitySettings, setValues]
+  );
+
+  const getInputMeterSnapshot = useCallback(() => {
+    if (isTesting) return getMicrophoneTestMeterSnapshot();
+    if (shouldUseActiveVoiceMeter) return getVoiceMicrophoneInputSnapshot();
+
+    return getSettingsMeterSnapshot();
+  }, [
+    isTesting,
+    getMicrophoneTestMeterSnapshot,
+    shouldUseActiveVoiceMeter,
+    getSettingsMeterSnapshot
+  ]);
+
   const startWebcamTest = useCallback(async () => {
     const didStart = await startVideoTest();
     if (!didStart) return;
@@ -233,7 +368,6 @@ const Devices = memo(() => {
     };
   }, []);
 
-  const hasMicrophones = inputDevices.length > 0;
   const hasDefaultPlaybackOption = playbackDevices.some(
     (device) => device?.deviceId === DEFAULT_NAME
   );
@@ -247,6 +381,17 @@ const Devices = memo(() => {
   );
 
   useEffect(() => {
+    if (preserveFormOnSensitivityDevicesSyncRef.current) {
+      preserveFormOnSensitivityDevicesSyncRef.current = false;
+      setValues((prev) => ({
+        ...prev,
+        inputSensitivityMode: devices.inputSensitivityMode,
+        noiseGateEnabled: devices.noiseGateEnabled,
+        noiseGateThresholdDb: devices.noiseGateThresholdDb
+      }));
+      return;
+    }
+
     setValues(devices);
   }, [devices, setValues]);
 
@@ -320,6 +465,71 @@ const Devices = memo(() => {
               </SelectContent>
             </Select>
 
+            <Group label={t('inputSensitivityLabel')} className="my-4">
+              <div className="max-w-xl space-y-3">
+                <Select
+                  value={inputSensitivityMode}
+                  onValueChange={handleInputSensitivityModeChange}
+                >
+                  <SelectTrigger className="w-92">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={InputSensitivityMode.AUTOMATIC}>
+                        {t('inputSensitivityAutomatic')}
+                      </SelectItem>
+                      <SelectItem value={InputSensitivityMode.MANUAL}>
+                        {t('inputSensitivityManual')}
+                      </SelectItem>
+                      <SelectItem value={InputSensitivityMode.OPEN}>
+                        {t('inputSensitivityOpen')}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+
+                {permissionState !== 'granted' && (
+                  <Button
+                    variant="outline"
+                    onClick={requestMicrophonePermission}
+                  >
+                    {t('permitMicAccess')}
+                  </Button>
+                )}
+
+                <MicrophoneTestLevelBar
+                  isActive={
+                    isTesting ||
+                    shouldUseActiveVoiceMeter ||
+                    shouldUseSettingsMeter ||
+                    shouldUseVoiceStreamFallbackMeter
+                  }
+                  inputSensitivityMode={inputSensitivityMode}
+                  controlsDisabled={!isNoiseGateAvailable}
+                  manualThresholdDb={manualNoiseGateThresholdDb}
+                  onManualThresholdChange={handleManualThresholdChange}
+                  getMeterSnapshot={getInputMeterSnapshot}
+                />
+
+                {!isNoiseGateAvailable && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('inputSensitivityUnavailable')}
+                    {noiseGateWorkletAvailability.reason
+                      ? ` ${noiseGateWorkletAvailability.reason}`
+                      : ''}
+                  </p>
+                )}
+
+                {inputMeterError && (
+                  <Alert variant="destructive">
+                    <Info />
+                    <AlertDescription>{inputMeterError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </Group>
+
             <Group
               label={t('noiseSuppressionLabel')}
               className="my-4"
@@ -371,36 +581,11 @@ const Devices = memo(() => {
                   }
                 />
               </Group>
-
-              <Group label={t('noiseGateLabel')}>
-                <Switch
-                  checked={values.noiseGateEnabled}
-                  disabled={!isNoiseGateAvailable}
-                  onCheckedChange={(checked) =>
-                    onChange('noiseGateEnabled', checked)
-                  }
-                />
-              </Group>
             </div>
-
-            {!isNoiseGateAvailable && (
-              <p className="text-xs text-muted-foreground">
-                {t('noiseGateUnavailable')}
-                {noiseGateWorkletAvailability.reason
-                  ? ` ${noiseGateWorkletAvailability.reason}`
-                  : ''}
-              </p>
-            )}
           </Group>
 
           <Group label={t('microphoneTestLabel')}>
             <div className="flex items-center gap-2">
-              {permissionState !== 'granted' && (
-                <Button variant="outline" onClick={requestMicrophonePermission}>
-                  {t('permitMicAccess')}
-                </Button>
-              )}
-
               {!isTesting ? (
                 <Button
                   variant="secondary"
@@ -424,17 +609,6 @@ const Devices = memo(() => {
                 {t('mutedDuringTest')}
               </p>
             )}
-
-            <MicrophoneTestLevelBar
-              isTesting={isTesting}
-              noiseGateEnabled={values.noiseGateEnabled}
-              noiseGateControlsDisabled={!isNoiseGateAvailable}
-              noiseGateThresholdDb={values.noiseGateThresholdDb}
-              onThresholdChange={(value) =>
-                onChange('noiseGateThresholdDb', value)
-              }
-              getAudioLevelSnapshot={getAudioLevelSnapshot}
-            />
 
             {microphoneTestError && (
               <Alert variant="destructive">

@@ -1,4 +1,9 @@
-import { MICROPHONE_GATE_DEFAULT_THRESHOLD_DB } from '@/helpers/audio-gate';
+import {
+  clampMicrophoneDecibels,
+  inputSensitivityModeUsesGate,
+  isInputSensitivityMode,
+  MICROPHONE_GATE_DEFAULT_THRESHOLD_DB
+} from '@/helpers/audio-gate';
 import { getRestrictOwnAudioSupport } from '@/helpers/get-display-media-support';
 import {
   getLocalStorageItemAsJSON,
@@ -6,6 +11,7 @@ import {
   setLocalStorageItemAsJSON
 } from '@/helpers/storage';
 import {
+  InputSensitivityMode,
   NoiseSuppression,
   Resolution,
   VideoCodec,
@@ -31,7 +37,8 @@ const getDefaultDeviceSettings = (): TDeviceSettings => ({
   echoCancellation: false,
   noiseSuppression: NoiseSuppression.NONE,
   autoGainControl: true,
-  noiseGateEnabled: false,
+  inputSensitivityMode: InputSensitivityMode.AUTOMATIC,
+  noiseGateEnabled: true,
   noiseGateThresholdDb: MICROPHONE_GATE_DEFAULT_THRESHOLD_DB,
   shareSystemAudio: true,
   restrictOwnAudio: getRestrictOwnAudioSupport(),
@@ -90,6 +97,35 @@ const normalizeDevices = (
   });
 
   return normalized;
+};
+
+const getSavedInputSensitivityMode = (
+  savedSettings: Partial<TDeviceSettings>
+): InputSensitivityMode => {
+  if (isInputSensitivityMode(savedSettings.inputSensitivityMode)) {
+    return savedSettings.inputSensitivityMode;
+  }
+
+  if (typeof savedSettings.noiseGateEnabled === 'boolean') {
+    return savedSettings.noiseGateEnabled
+      ? InputSensitivityMode.MANUAL
+      : InputSensitivityMode.OPEN;
+  }
+
+  return InputSensitivityMode.AUTOMATIC;
+};
+
+const getSavedNoiseGateThresholdDb = (
+  savedSettings: Partial<TDeviceSettings>
+) => {
+  if (
+    typeof savedSettings.noiseGateThresholdDb !== 'number' ||
+    !Number.isFinite(savedSettings.noiseGateThresholdDb)
+  ) {
+    return MICROPHONE_GATE_DEFAULT_THRESHOLD_DB;
+  }
+
+  return clampMicrophoneDecibels(savedSettings.noiseGateThresholdDb);
 };
 
 export type TDevicesProvider = {
@@ -203,7 +239,7 @@ const DevicesProvider = memo(({ children }: TDevicesProviderProps) => {
     if (!initializedRef.current) {
       initializedRef.current = true;
 
-      const savedSettings = getLocalStorageItemAsJSON<TDeviceSettings>(
+      const savedSettings = getLocalStorageItemAsJSON<Partial<TDeviceSettings>>(
         LocalStorageKey.DEVICES_SETTINGS
       );
       const defaultDeviceSettings = getDefaultDeviceSettings();
@@ -226,12 +262,17 @@ const DevicesProvider = memo(({ children }: TDevicesProviderProps) => {
         const restrictOwnAudio = defaultDeviceSettings.restrictOwnAudio
           ? (savedSettings.restrictOwnAudio ?? true)
           : false;
+        const inputSensitivityMode =
+          getSavedInputSensitivityMode(savedSettings);
 
         base = {
           ...defaultDeviceSettings,
           ...savedSettings,
           noiseSuppression,
-          restrictOwnAudio
+          restrictOwnAudio,
+          inputSensitivityMode,
+          noiseGateEnabled: inputSensitivityModeUsesGate(inputSensitivityMode),
+          noiseGateThresholdDb: getSavedNoiseGateThresholdDb(savedSettings)
         };
       } else {
         base = defaultDeviceSettings;
