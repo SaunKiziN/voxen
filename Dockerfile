@@ -1,3 +1,16 @@
+FROM oven/bun:1.3.14 AS builder
+
+WORKDIR /app
+
+COPY package.json bun.lock tsconfig.json ./
+COPY apps ./apps
+COPY packages ./packages
+
+RUN bun install --frozen-lockfile
+
+WORKDIR /app/apps/server
+RUN bun run build
+
 FROM oven/bun:1.3.14
 
 ARG TARGETARCH
@@ -5,8 +18,8 @@ ENV RUNNING_IN_DOCKER=true
 
 USER root
 
-COPY apps/server/build/out/sharkord-linux-x64 /tmp/sharkord-linux-x64
-COPY apps/server/build/out/sharkord-linux-arm64 /tmp/sharkord-linux-arm64
+COPY --from=builder /app/apps/server/build/out/sharkord-linux-x64 /tmp/sharkord-linux-x64
+COPY --from=builder /app/apps/server/build/out/sharkord-linux-arm64 /tmp/sharkord-linux-arm64
 
 RUN set -eux; \
     case "$TARGETARCH" in \
