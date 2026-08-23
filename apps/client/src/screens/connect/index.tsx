@@ -5,7 +5,6 @@ import { useInfo } from '@/features/server/hooks';
 import { PRODUCT_LOGO_PATH, PRODUCT_NAME } from '@/helpers/branding';
 import { getFileUrl, getUrlFromServer } from '@/helpers/get-file-url';
 import {
-  getLocalStorageItem,
   getLocalStorageItemBool,
   LocalStorageKey,
   removeLocalStorageItem,
@@ -39,14 +38,10 @@ const Connect = memo(() => {
   const { values, r, setErrors, onChange } = useForm<{
     identity: string;
     password: string;
-    rememberCredentials: boolean;
     autoLogin: boolean;
   }>({
-    identity: getLocalStorageItem(LocalStorageKey.IDENTITY) || '',
-    password: getLocalStorageItem(LocalStorageKey.USER_PASSWORD) || '',
-    rememberCredentials: !!getLocalStorageItem(
-      LocalStorageKey.REMEMBER_CREDENTIALS
-    ),
+    identity: '',
+    password: '',
     autoLogin: getLocalStorageItemBool(LocalStorageKey.AUTO_LOGIN)
   });
 
