@@ -5,7 +5,7 @@ import {
   type TJoinedUser
 } from '@sharkord/shared';
 import chalk from 'chalk';
-import { eq, isNull, max, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, lt, max, or, sql } from 'drizzle-orm';
 import http from 'http';
 import jwt from 'jsonwebtoken';
 import z from 'zod';
@@ -189,15 +189,29 @@ const loginRouteHandler = async (
     }
 
     if (result.invite) {
-      inviteRoleId = result.invite?.roleId ?? null;
-
-      await db
+      const consumedInvite = await db
         .update(invites)
         .set({
           uses: sql`${invites.uses} + 1`
         })
-        .where(eq(invites.code, data.invite!))
-        .execute();
+        .where(
+          and(
+            eq(invites.code, data.invite!),
+            or(isNull(invites.maxUses), lt(invites.uses, invites.maxUses)),
+            or(isNull(invites.expiresAt), gt(invites.expiresAt, Date.now()))
+          )
+        )
+        .returning({ roleId: invites.roleId })
+        .get();
+
+      if (!consumedInvite) {
+        if (!settings.allowNewUsers) {
+          await Bun.password.verify('dummy', await getDummyArgon2Hash());
+          throw new HttpValidationError('identity', GENERIC_LOGIN_ERROR);
+        }
+      } else {
+        inviteRoleId = consumedInvite.roleId ?? null;
+      }
     }
 
     // user doesn't exist, but registration is open OR invite was valid - create the user automatically
