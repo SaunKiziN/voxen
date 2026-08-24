@@ -1,4 +1,4 @@
-import type { TTempFile } from '@sharkord/shared';
+import { ActivityLogType, type TTempFile } from '@sharkord/shared';
 import { describe, expect, test } from 'bun:test';
 import {
   getCaller,
@@ -7,6 +7,8 @@ import {
   uploadFile
 } from '../../__tests__/helpers';
 import { TEST_SECRET_TOKEN } from '../../__tests__/seed';
+import { tdb } from '../../__tests__/setup';
+import { activityLog } from '../../db/schema';
 
 describe('others router', () => {
   test('should throw when user tries to join with no handshake', async () => {
@@ -186,6 +188,31 @@ describe('others router', () => {
 
     expect(settings.password).toBe('');
     expect(settings.secretToken).toBe('');
+  });
+
+  test('should redact server password in activity log', async () => {
+    const { caller } = await initTest(1);
+
+    await caller.others.updateSettings({
+      password: 'super-secret-password'
+    });
+
+    await Bun.sleep(50);
+
+    const logs = await tdb.select().from(activityLog);
+    const settingsLog = logs
+      .filter((log) => log.type === ActivityLogType.EDIT_SERVER_SETTINGS)
+      .at(-1);
+
+    expect(settingsLog).toBeDefined();
+    expect(JSON.stringify(settingsLog?.details)).not.toContain(
+      'super-secret-password'
+    );
+    expect(settingsLog?.details).toEqual({
+      values: {
+        password: '[REDACTED]'
+      }
+    });
   });
 
   test('should throw when user lacks permissions (update settings)', async () => {
