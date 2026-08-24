@@ -226,6 +226,35 @@ describe('/login', () => {
     expect(data.errors).toHaveProperty('identity');
   });
 
+  test('should only allow one concurrent registration for a single-use invite', async () => {
+    await tdb.update(settings).set({ allowNewUsers: false });
+
+    await tdb.insert(invites).values({
+      code: 'SINGLEUSEINVITE',
+      creatorId: 1,
+      maxUses: 1,
+      uses: 0,
+      expiresAt: Date.now() + 86400000,
+      createdAt: Date.now()
+    });
+
+    const responses = await Promise.all([
+      login('concurrentinviteuser1', 'password123', 'SINGLEUSEINVITE'),
+      login('concurrentinviteuser2', 'password123', 'SINGLEUSEINVITE')
+    ]);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([
+      200, 400
+    ]);
+
+    const updatedInvite = await tdb
+      .select()
+      .from(invites)
+      .where(eq(invites.code, 'SINGLEUSEINVITE'))
+      .get();
+
+    expect(updatedInvite?.uses).toBe(1);
+  });
   test('should fail with non-existent invite', async () => {
     await tdb.update(settings).set({ allowNewUsers: false });
 
