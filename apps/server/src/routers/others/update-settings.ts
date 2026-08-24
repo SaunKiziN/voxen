@@ -91,7 +91,12 @@ const updateSettingsRoute = protectedProcedure
     enqueueActivityLog({
       type: ActivityLogType.EDIT_SERVER_SETTINGS,
       userId: ctx.userId,
-      details: { values: input }
+      details: {
+        values: {
+          ...input,
+          password: input.password ? '[REDACTED]' : input.password
+        }
+      }
     });
   });
 
