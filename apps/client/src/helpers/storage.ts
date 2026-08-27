@@ -1,7 +1,4 @@
 export enum LocalStorageKey {
-  IDENTITY = 'sharkord-identity',
-  REMEMBER_CREDENTIALS = 'sharkord-remember-identity',
-  USER_PASSWORD = 'sharkord-user-password',
   VITE_UI_THEME = 'vite-ui-theme',
   DEVICES_SETTINGS = 'sharkord-devices-settings',
   FLOATING_CARD_POSITION = 'sharkord-floating-card-position',
