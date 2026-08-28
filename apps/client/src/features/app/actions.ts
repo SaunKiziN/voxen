@@ -146,7 +146,11 @@ export const setSelectedDmChannelId = (channelId: number | undefined) =>
 
 export const setBrowserNotifications = async (enabled: boolean) => {
   if (enabled) {
-    await assertNotificationsPermission();
+    const hasPermission = await assertNotificationsPermission();
+
+    if (!hasPermission) {
+      return;
+    }
   }
 
   store.dispatch(appSliceActions.setBrowserNotifications(enabled));
@@ -155,7 +159,11 @@ export const setBrowserNotifications = async (enabled: boolean) => {
 
 export const setBrowserNotificationsForMentions = async (enabled: boolean) => {
   if (enabled) {
-    await assertNotificationsPermission();
+    const hasPermission = await assertNotificationsPermission();
+
+    if (!hasPermission) {
+      return;
+    }
   }
 
   store.dispatch(appSliceActions.setBrowserNotificationsForMentions(enabled));
@@ -167,7 +175,11 @@ export const setBrowserNotificationsForMentions = async (enabled: boolean) => {
 
 export const setBrowserNotificationsForDms = async (enabled: boolean) => {
   if (enabled) {
-    await assertNotificationsPermission();
+    const hasPermission = await assertNotificationsPermission();
+
+    if (!hasPermission) {
+      return;
+    }
   }
 
   store.dispatch(appSliceActions.setBrowserNotificationsForDms(enabled));
@@ -179,7 +191,11 @@ export const setBrowserNotificationsForDms = async (enabled: boolean) => {
 
 export const setBrowserNotificationsForReplies = async (enabled: boolean) => {
   if (enabled) {
-    await assertNotificationsPermission();
+    const hasPermission = await assertNotificationsPermission();
+
+    if (!hasPermission) {
+      return;
+    }
   }
 
   store.dispatch(appSliceActions.setBrowserNotificationsForReplies(enabled));
