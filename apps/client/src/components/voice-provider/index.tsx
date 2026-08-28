@@ -1103,20 +1103,22 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
           ...getResWidthHeight(devices?.screenResolution),
           frameRate: devices?.screenFramerate
         },
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          channelCount: 2,
-          sampleRate: 48000,
-          // @ts-expect-error - experimental, not in types yet
-          suppressLocalAudioPlayback: canSuppressLocalAudioPlayback
-            ? (devices.suppressLocalAudioPlayback ?? false)
-            : undefined,
-          restrictOwnAudio: canRestrictOwnAudio
-            ? (devices.restrictOwnAudio ?? false)
-            : undefined
-        }
+        audio: devices.shareSystemAudio
+          ? {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+              channelCount: 2,
+              sampleRate: 48000,
+              // @ts-expect-error - experimental, not in types yet
+              suppressLocalAudioPlayback: canSuppressLocalAudioPlayback
+                ? (devices.suppressLocalAudioPlayback ?? false)
+                : undefined,
+              restrictOwnAudio: canRestrictOwnAudio
+                ? (devices.restrictOwnAudio ?? false)
+                : undefined
+            }
+          : false
       };
 
       logVoice(
@@ -1322,6 +1324,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     devices.screenFramerate,
     devices.screenCodec,
     devices.screenBitrate,
+    devices.shareSystemAudio,
     devices.restrictOwnAudio,
     devices.suppressLocalAudioPlayback,
     simulcastEnabled

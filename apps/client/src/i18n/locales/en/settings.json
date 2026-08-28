@@ -151,6 +151,8 @@
   "simulcastUserDesc": "Send separate low, medium, and high-quality layers for your webcam and screen share. This uses more bandwidth and CPU, but helps viewers on slower connections receive a smoother stream. Forces the use of VP8 when enabled.",
   "simulcastDisabledByServerDesc": "Simulcast is disabled on this server.",
   "screenSharingLabel": "Screen Sharing",
+  "shareSystemAudioLabel": "Share System Audio",
+  "shareSystemAudioDesc": "Allow audio from the shared tab, window, or screen to be captured and sent with your screen share.",
   "restrictOwnAudioLabel": "Restrict Own Audio",
   "restrictOwnAudioDesc": "Exclude VOXEN audio from the audio captured during screen sharing.",
   "restrictOwnAudioUnsupported": "Your browser does not support restricting your own audio during screen sharing. VOXEN audio may be captured in the shared stream, which can cause echo or feedback.",
