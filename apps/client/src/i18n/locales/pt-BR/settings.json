@@ -151,6 +151,8 @@
   "simulcastUserDesc": "Enviar camadas separadas de baixa, média e alta qualidade para sua webcam e compartilhamento de tela. Isso usa mais largura de banda e CPU, mas ajuda pessoas em conexões mais lentas a receberem uma transmissão mais estável. Força o uso de VP8 quando ativado.",
   "simulcastDisabledByServerDesc": "Simulcast está desativado neste servidor.",
   "screenSharingLabel": "Compartilhamento de tela",
+  "shareSystemAudioLabel": "Compartilhar áudio do sistema",
+  "shareSystemAudioDesc": "Permitir que o áudio da aba, janela ou tela compartilhada seja capturado e enviado junto com o compartilhamento.",
   "restrictOwnAudioLabel": "Restringir áudio próprio",
   "restrictOwnAudioDesc": "Excluir o áudio do VOXEN do áudio capturado durante o compartilhamento de tela.",
   "restrictOwnAudioUnsupported": "Seu navegador não oferece suporte para restringir seu próprio áudio durante o compartilhamento de tela. O áudio do VOXEN pode ser capturado na transmissão compartilhada, causando eco ou microfonia.",

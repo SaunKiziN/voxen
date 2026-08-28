@@ -803,6 +803,18 @@ const Devices = memo(() => {
             </div>
 
             <Group
+              label={t('shareSystemAudioLabel')}
+              description={t('shareSystemAudioDesc')}
+            >
+              <Switch
+                checked={!!values.shareSystemAudio}
+                onCheckedChange={(checked) =>
+                  onChange('shareSystemAudio', checked)
+                }
+              />
+            </Group>
+
+            <Group
               label={t('restrictOwnAudioLabel')}
               description={t('restrictOwnAudioDesc')}
             >
